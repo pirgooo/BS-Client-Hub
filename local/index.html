@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Battle Start Hub — live (local)</title>
+
+<!--
+  RUNS THE REAL BLOCK AGAINST THE REAL SUPABASE PROJECT.
+
+  This is not the preview: there is no stub here. Signing in creates a
+  real session, and anything you save is written to the live database.
+
+  Start it with a local web server — opening this file straight from
+  disk (file://) gives the page a null origin, which breaks Supabase
+  sessions:
+
+      cd hub
+      python3 -m http.server 8000        (Windows: python -m http.server 8000)
+
+  then open  http://localhost:8000/local/
+
+  For the password-recovery link to come back here, add
+  http://localhost:8000/local/ to
+  Supabase -> Authentication -> URL Configuration -> Redirect URLs.
+-->
+
+<style>
+  html, body { margin: 0; padding: 0; }
+  body { padding-top: 34px; background: #F6F7FB; }
+
+  /* A permanent reminder that this is the live database, not the stub */
+  #livebar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 99998;
+    display: flex; align-items: center; gap: 10px;
+    height: 34px; padding: 0 16px;
+    background: #EC1E5E; color: #fff;
+    font: 700 12px/1 'Manrope', -apple-system, Segoe UI, Roboto, sans-serif;
+    letter-spacing: .02em;
+  }
+  #livebar .dot {
+    width: 8px; height: 8px; border-radius: 50%; background: #fff;
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+  #livebar code { background: rgba(255,255,255,.2); padding: 3px 8px; border-radius: 5px; font-weight: 600; }
+  #livebar .right { margin-left: auto; opacity: .9; font-weight: 600; }
+
+  #boot { padding: 80px 20px; text-align: center; color: #8A93A6; font-family: system-ui, sans-serif; line-height: 1.7; }
+  #boot.err { color: #D01050; }
+  #boot code { background: #EEF1F8; padding: 3px 8px; border-radius: 5px; }
+</style>
+</head>
+
+<body>
+
+<div id="livebar">
+  <span class="dot"></span>
+  <span>LIVE DATABASE</span>
+  <code id="livebar-project">connecting…</code>
+  <span class="right">real sign-in · real writes</span>
+</div>
+
+<div id="host"><div id="boot">Loading the block…</div></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var host = document.getElementById('host');
+
+  if (window.location.protocol === 'file:') {
+    host.innerHTML = '<div id="boot" class="err"><b>Opened straight from disk.</b><br><br>' +
+      'A page served over <code>file://</code> has a null origin, so Supabase sessions cannot work.<br>' +
+      'Start a local server instead:<br><br>' +
+      '<code>cd hub</code><br><code>python3 -m http.server 8000</code><br><br>' +
+      'then open <code>http://localhost:8000/local/</code></div>';
+    return;
+  }
+
+  fetch('../tilda/battle-start-hub.html', { cache: 'no-store' })
+    .then(function (r) {
+      if (!r.ok) throw new Error('battle-start-hub.html → HTTP ' + r.status);
+      return r.text();
+    })
+    .then(function (html) {
+      /* Show which project this is pointed at, straight from CONFIG */
+      var m = /\burl:\s*'https:\/\/([a-z0-9]+)\.supabase\.co'/.exec(html);
+      document.getElementById('livebar-project').textContent =
+        m ? m[1] + '.supabase.co' : 'project unknown';
+
+      var doc = new DOMParser().parseFromString('<body>' + html + '</body>', 'text/html');
+
+      /* Styles go to the head; inline scripts must be recreated to run */
+      var scripts = [];
+      Array.prototype.slice.call(doc.querySelectorAll('script')).forEach(function (s) {
+        if (!s.src) scripts.push(s.textContent);
+        s.parentNode.removeChild(s);
+      });
+      Array.prototype.slice.call(doc.querySelectorAll('style'))
+        .forEach(function (st) { document.head.appendChild(st.cloneNode(true)); });
+
+      host.innerHTML = '';
+      while (doc.body.firstChild) { host.appendChild(doc.body.firstChild); }
+
+      scripts.forEach(function (code) {
+        var el = document.createElement('script');
+        el.textContent = code;
+        document.body.appendChild(el);
+      });
+    })
+    .catch(function (err) {
+      host.innerHTML = '<div id="boot" class="err">Could not load the block: ' + err.message +
+        '<br><br>Run the server from the <code>hub</code> folder, so that ' +
+        '<code>tilda/battle-start-hub.html</code> sits one level up from here.</div>';
+    });
+})();
+</script>
+
+</body>
+</html>

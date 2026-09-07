@@ -164,21 +164,45 @@ Raw HTML is escaped rather than rendered, so an article cannot inject markup.
 
 ---
 
-## Local preview
+## Running it locally
 
-You can click through every screen without Tilda and without a Supabase project —
-the preview loads the real block file and swaps in a stubbed Supabase client:
+Both local entry points load the same `tilda/battle-start-hub.html`, so what you
+see is what Tilda will serve. Start a web server from the `hub` folder:
 
 ```bash
 cd hub
-python3 -m http.server 8000
-# open http://localhost:8000/preview/
+python3 -m http.server 8000     # Windows: python -m http.server 8000
 ```
 
-Demo credentials: `demo@battlestart.com` / `demo1234`.
+**Opening the file straight from disk does not work.** A page on `file://` has a
+null origin, which breaks Supabase sessions, and the browser blocks the block
+file from loading. It has to be served over `http://localhost`.
 
-The bar along the bottom switches screens and clears the session; it exists only
-in the preview. `preview/mock-supabase.js` never ships to production.
+### `http://localhost:8000/preview/` — stubbed data
+
+No Supabase project needed, no network. Sign in with
+`demo@battlestart.com` / `demo1234`. The bar along the bottom switches screens
+and clears the session. `preview/mock-supabase.js` never ships to production.
+
+Use it for design work and for clicking through flows.
+
+### `http://localhost:8000/local/` — the live database
+
+The real project, no stub: signing in creates a real session and anything you
+save is written to the live database. A crimson bar across the top names the
+project it is pointed at, so it can never be mistaken for the preview.
+
+Use it to check the real content and real accounts before touching Tilda.
+
+Two things to set up for it:
+
+- Add `http://localhost:8000/local/` to **Authentication → URL Configuration →
+  Redirect URLs**, otherwise the password-recovery link will not come back here.
+  Sign-in itself works without this.
+- The user must exist and be confirmed (**Add user** with *Auto Confirm User*).
+
+Sessions are kept per origin, so `localhost` and the Tilda domain sign in
+separately — being signed in on one says nothing about the other.
 
 ---
 
@@ -192,8 +216,10 @@ hub/
 ├── tilda/
 │   └── battle-start-hub.html   THE HUB — paste this one file into Tilda
 ├── preview/
-│   ├── index.html              local stand
+│   ├── index.html              local stand, stubbed data
 │   └── mock-supabase.js        Supabase stub, preview only
+├── local/
+│   └── index.html              local stand, live database
 └── assets/                     images and files served via jsDelivr
 ```
 
