@@ -3,8 +3,7 @@
 An invitation-only information hub for Battle Start clients: a knowledge base and
 a client profile, built as **one Tilda block driven by Supabase**.
 
-Visual language follows the [avatararena.ru](https://avatararena.ru/) reference —
-light ground, floating white pill header, generous rounding, crimson `#EC1E5E`
+Reference - light ground, floating white pill header, generous rounding, crimson `#EC1E5E`
 accent against deep navy `#1F2A5A` text.
 
 ---
