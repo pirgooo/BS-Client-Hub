@@ -70,11 +70,13 @@
       return r.text();
     })
     .then(function (html) {
-      /* The block refuses to start on placeholder credentials. The stub
-         ignores them entirely, so any non-placeholder value will do. */
+      /* The block refuses to start on placeholder credentials, and the
+         stub ignores credentials entirely — so whatever sits in CONFIG,
+         placeholder or the real project, is swapped for dummy values.
+         That also keeps the preview off the real project by construction. */
       html = html
-        .replace('https://YOUR-PROJECT.supabase.co', 'https://preview.local')
-        .replace('YOUR-ANON-KEY', 'preview-anon-key');
+        .replace(/\burl:\s*'[^']*'/, "url:     'https://preview.supabase.co'")
+        .replace(/\banonKey:\s*'[^']*'/, "anonKey: 'preview-anon-key'");
 
       var doc = new DOMParser().parseFromString('<body>' + html + '</body>', 'text/html');
 

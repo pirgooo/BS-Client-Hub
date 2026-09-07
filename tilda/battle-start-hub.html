@@ -376,17 +376,20 @@
   'use strict';
 
   /* ===================================================================
-     CONFIG — FILL IN THESE TWO VALUES
+     CONFIG
      Supabase Dashboard -> Project Settings -> API
        url     -> "Project URL"
-       anonKey -> "Project API keys" -> anon / public
-     The anon key is meant to be public and is safe in page source:
-     access is limited by RLS policies, not by hiding the key.
-     Never put the service_role key here — it bypasses RLS.
+       anonKey -> the PUBLIC key. Both formats work: the current
+                  "publishable" key (sb_publishable_...) and the legacy
+                  anon JWT (eyJ...).
+     That key is meant to be public and is safe in page source: access is
+     limited by RLS policies, not by hiding the key.
+     Never put the secret key here (sb_secret_... or service_role) — it
+     bypasses RLS entirely. The guard below refuses to start if you do.
      =================================================================== */
   var CONFIG = {
-    url:     'https://YOUR-PROJECT.supabase.co',
-    anonKey: 'YOUR-ANON-KEY',
+    url:     'https://sbyhcqjthddqbgpwmoxi.supabase.co',
+    anonKey: 'sb_publishable_ci3Df8P-Eqx45sH_CdR3xg_ZpHFTBAf',
     brand:   'Battle Start'
   };
 
@@ -1238,8 +1241,16 @@
   }
 
   function boot() {
-    if (CONFIG.url.indexOf('YOUR-PROJECT') !== -1 || CONFIG.anonKey.indexOf('YOUR-ANON-KEY') !== -1) {
+    if (!/^https:\/\/[a-z0-9]+\.supabase\.co$/.test(CONFIG.url) || !CONFIG.anonKey ||
+        CONFIG.anonKey.indexOf('YOUR-ANON-KEY') !== -1) {
       fatal('The hub is not configured yet: fill in url and anonKey in CONFIG at the top of the block.');
+      return;
+    }
+
+    /* A secret key in page source would hand every visitor full read and
+       write access to the database, RLS included. Refuse to start. */
+    if (/^sb_secret_/.test(CONFIG.anonKey) || /service_role/.test(CONFIG.anonKey)) {
+      fatal('That is a SECRET key. Put the publishable (anon) key here instead — a secret key bypasses row level security and must never appear in page source. Rotate this key in Project Settings -> API.');
       return;
     }
 

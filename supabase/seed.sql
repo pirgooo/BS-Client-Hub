@@ -146,4 +146,5 @@ from (values
   ('brand-assets',            'Social templates (ZIP)',    'https://cdn.jsdelivr.net/gh/pirgooo/pirgooo@main/hub/assets/files/social-templates.zip',  'zip', '34 MB',  20),
   ('contracts-and-templates', 'House rules (PDF)',         'https://cdn.jsdelivr.net/gh/pirgooo/pirgooo@main/hub/assets/files/house-rules.pdf',       'pdf', '210 KB', 10)
 ) as v(article_slug, title, url, kind, size_label, sort_order)
-join public.kb_articles a on a.slug = v.article_slug;
+join public.kb_articles a on a.slug = v.article_slug
+on conflict (article_id, url) do nothing;

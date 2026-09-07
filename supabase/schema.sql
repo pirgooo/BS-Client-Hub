@@ -93,6 +93,11 @@ create table if not exists public.kb_files (
 
 create index if not exists kb_files_article_idx on public.kb_files (article_id);
 
+-- The same file attached twice to the same article is always a mistake,
+-- so the database refuses it rather than relying on the seed script.
+create unique index if not exists kb_files_article_url_idx
+  on public.kb_files (article_id, url);
+
 comment on table public.kb_files is 'Links to files (GitHub/CDN) attached to articles';
 
 -- ---------------------------------------------------------------------

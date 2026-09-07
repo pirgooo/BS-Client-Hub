@@ -57,11 +57,13 @@ visitors by default.
    hub is not empty while you are wiring up Tilda.
 4. Go to **Project Settings → API** and copy two values:
    - **Project URL** — `https://xxxxx.supabase.co`
-   - **anon / public** key
+   - the **public** key — either the current publishable key
+     (`sb_publishable_...`) or the legacy anon JWT (`eyJ...`); both work.
 
-The anon key is meant to be public and is safe in page source: access is limited
-by RLS policies, not by hiding the key. The **service_role** key is the opposite —
-it bypasses RLS entirely, so it must never appear anywhere in Tilda.
+That key is meant to be public and is safe in page source: access is limited by
+RLS policies, not by hiding the key. The **secret** key (`sb_secret_...`, formerly
+`service_role`) is the opposite — it bypasses RLS entirely, so it must never
+appear anywhere in Tilda. The block checks for it on start-up and refuses to run.
 
 ---
 
@@ -97,8 +99,8 @@ every article from them without deleting the account.
 
    ```js
    var CONFIG = {
-     url:     'https://xxxxx.supabase.co',   // Project URL
-     anonKey: 'eyJhbGciOi...',               // anon / public key
+     url:     'https://xxxxx.supabase.co',       // Project URL
+     anonKey: 'sb_publishable_...',              // the PUBLIC key
      brand:   'Battle Start'
    };
    ```
