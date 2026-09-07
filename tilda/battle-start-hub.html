@@ -189,7 +189,11 @@
    FORMS
    --------------------------------------------------------------------- */
 .bsh-field { margin-bottom: 16px; }
-.bsh-field__label { display: block; font-size: 13px; font-weight: 600; color: var(--bsh-muted); margin-bottom: 7px; }
+.bsh-field__label {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 600; color: var(--bsh-muted); margin-bottom: 7px;
+}
+textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh-font); }
 .bsh-input {
   width: 100%; padding: 14px 16px;
   border: 1px solid var(--bsh-line); border-radius: var(--bsh-radius-sm);
@@ -274,7 +278,70 @@
 .bsh-recent__row:hover { color: var(--bsh-pink); }
 .bsh-recent__title { font-weight: 700; font-size: 16px; }
 .bsh-recent__sum { font-size: 14px; color: var(--bsh-muted); margin-top: 2px; display: block; }
-.bsh-recent__arrow { margin-left: auto; color: var(--bsh-muted); font-size: 20px; flex: none; }
+.bsh-recent__body { flex: 1; min-width: 0; }
+.bsh-recent__arrow { color: var(--bsh-muted); font-size: 20px; flex: none; }
+
+/* ---------------------------------------------------------------------
+   EXPERIENCE. The client earns it by describing their arena; the bar and
+   the task list exist to make the next step obvious and small.
+   --------------------------------------------------------------------- */
+.bsh-lvl {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 11px; border-radius: var(--bsh-pill);
+  background: var(--bsh-pink-soft); color: var(--bsh-pink);
+  font-size: 12px; font-weight: 800; letter-spacing: .02em; white-space: nowrap;
+}
+.bsh-xp { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 30px; align-items: stretch; }
+.bsh-xp__side { display: flex; flex-direction: column; }
+.bsh-xp__now { display: flex; align-items: baseline; gap: 12px; }
+.bsh-xp__level { font-size: 28px; font-weight: 800; letter-spacing: -.02em; }
+.bsh-xp__count { margin-left: auto; font-size: 14px; font-weight: 800; color: var(--bsh-muted); }
+.bsh-xp__bar { height: 12px; border-radius: 999px; background: var(--bsh-soft); overflow: hidden; margin: 14px 0 10px; }
+.bsh-xp__fill {
+  height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--bsh-pink), #FF6E9E);
+  transition: width .7s cubic-bezier(.2, .7, .3, 1);
+}
+.bsh-xp__hint { font-size: 14px; color: var(--bsh-muted); }
+.bsh-xp__perk { margin-top: auto; padding: 16px 18px; border-radius: var(--bsh-radius-sm); background: var(--bsh-pink-soft); }
+.bsh-xp__perk b {
+  display: block; font-size: 11px; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--bsh-pink); margin-bottom: 6px;
+}
+.bsh-xp__perk span { font-size: 15px; font-weight: 700; color: var(--bsh-navy); line-height: 1.45; }
+
+.bsh-tasks__title {
+  font-size: 12px; font-weight: 800; color: var(--bsh-muted);
+  text-transform: uppercase; letter-spacing: .07em; margin-bottom: 14px;
+}
+.bsh-task {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 14px; border-radius: var(--bsh-radius-sm);
+  background: var(--bsh-soft); margin-bottom: 8px;
+}
+.bsh-task:hover { background: #E9EDF8; }
+.bsh-task__label { font-size: 14px; font-weight: 700; }
+.bsh-task__hint { font-size: 12px; color: var(--bsh-muted); display: block; margin-top: 1px; }
+.bsh-task__pts { margin-left: auto; flex: none; font-size: 13px; font-weight: 800; color: var(--bsh-pink); }
+.bsh-tasks__done { padding: 26px 18px; text-align: center; color: var(--bsh-muted); font-size: 14px; }
+
+.bsh-pts {
+  font-size: 11px; font-weight: 800; color: var(--bsh-pink);
+  background: var(--bsh-pink-soft); padding: 2px 7px; border-radius: var(--bsh-pill);
+}
+
+/* locked article card: advertised, not readable */
+.bsh-art--locked { background: #fff; border: 1px dashed #D6DCEC; }
+.bsh-art--locked:hover { background: #fff; border-color: var(--bsh-pink); transform: none; }
+.bsh-art--locked .bsh-art__title { opacity: .6; }
+.bsh-art--locked .bsh-art__sum { opacity: .6; }
+.bsh-art__lock { margin-top: auto; font-size: 14px; font-weight: 800; color: var(--bsh-pink); }
+
+.bsh-locked { text-align: center; padding: 54px 26px; }
+.bsh-locked__icon { font-size: 44px; margin-bottom: 14px; }
+.bsh-locked__bar { max-width: 420px; margin: 24px auto 0; }
+
+@media (max-width: 960px) { .bsh-xp { grid-template-columns: minmax(0, 1fr); gap: 24px; } }
 
 /* ---------------------------------------------------------------------
    KNOWLEDGE BASE
@@ -402,7 +469,9 @@
     session:  null,   /* current Supabase session      */
     profile:  null,   /* the client's profiles row     */
     cats:     null,   /* knowledge base categories     */
-    arts:     null,   /* knowledge base articles       */
+    arts:     null,   /* catalogue rows, locked included */
+    levels:   null,   /* level thresholds and perks    */
+    rules:    null,   /* what earns experience         */
     kbQuery:  '',     /* current search text           */
     recovery: false,  /* arrived from a recovery email */
     loaded:   false   /* profile + index fetched        */
@@ -568,17 +637,54 @@
   }
 
   function loadIndex() {
-    if (S.cats && S.arts) return Promise.resolve();
+    if (S.cats && S.arts && S.levels && S.rules) return Promise.resolve();
     return Promise.all([
       sb.from('kb_categories').select('*').eq('is_published', true).order('sort_order', { ascending: true }),
-      sb.from('kb_articles')
-        .select('id, slug, title, summary, reading_time, sort_order, created_at, category_id')
-        .eq('is_published', true).order('sort_order', { ascending: true })
+      /* kb_catalog, not kb_articles: it lists locked material too, so it
+         can be advertised, but it carries no article body. */
+      sb.from('kb_catalog').select('*').order('sort_order', { ascending: true }),
+      sb.from('levels').select('*').order('min_exp', { ascending: true }),
+      sb.from('exp_rules').select('*').order('sort_order', { ascending: true })
     ]).then(function (res) {
-      if (res[0].error) throw res[0].error;
-      if (res[1].error) throw res[1].error;
-      S.cats = res[0].data || [];
-      S.arts = res[1].data || [];
+      for (var i = 0; i < res.length; i++) { if (res[i].error) throw res[i].error; }
+      S.cats   = res[0].data || [];
+      S.arts   = res[1].data || [];
+      S.levels = res[2].data || [];
+      S.rules  = res[3].data || [];
+    });
+  }
+
+  /* -------------------------------------------------------------------
+     Where the client stands. exp comes from the database, which computes
+     it from the profile — the browser only presents it.
+     ------------------------------------------------------------------- */
+  function levelInfo() {
+    var exp = (S.profile && S.profile.exp) || 0;
+    var ls  = (S.levels || []).slice().sort(function (a, b) { return a.min_exp - b.min_exp; });
+    if (!ls.length) return { exp: exp, level: 1, title: '', next: null, toNext: 0, pct: 100 };
+
+    var cur = ls[0], next = null;
+    for (var i = 0; i < ls.length; i++) {
+      if (exp >= ls[i].min_exp) cur = ls[i];
+      else { next = ls[i]; break; }
+    }
+    var span = next ? (next.min_exp - cur.min_exp) : 0;
+    return {
+      exp: exp,
+      level: cur.level,
+      title: cur.title,
+      next: next,
+      toNext: next ? next.min_exp - exp : 0,
+      pct: next ? Math.max(3, Math.min(100, Math.round((exp - cur.min_exp) / span * 100))) : 100
+    };
+  }
+
+  /* Fields still worth filling in, richest first. */
+  function pendingTasks() {
+    var p = S.profile || {};
+    return (S.rules || []).filter(function (r) {
+      var v = (p[r.field] == null ? '' : String(p[r.field])).trim();
+      return v.length < (r.min_length || 1);
     });
   }
 
@@ -624,6 +730,8 @@
         }).join('') +
       '</div>' +
       '<div class="bsh-nav__side">' +
+        (S.levels ? '<a class="bsh-lvl" href="#/hub" title="Experience">LVL ' +
+                    levelInfo().level + ' · ' + levelInfo().exp + ' EXP</a>' : '') +
         '<div class="bsh-nav__user">' +
           '<div class="bsh-nav__avatar">' + esc(initials(p.full_name, email)) + '</div>' +
           '<div>' +
@@ -800,6 +908,56 @@
     });
   }
 
+  /* Experience needed to reach a given level. */
+  function expForLevel(n) {
+    var row = (S.levels || []).filter(function (l) { return l.level === n; })[0];
+    return row ? row.min_exp : 0;
+  }
+
+  /* The progress card: where the client stands, and the smallest next
+     step towards the thing they cannot read yet. */
+  function xpCard() {
+    var L     = levelInfo();
+    var tasks = pendingTasks().slice(0, 5);
+    var perk  = L.next && L.next.perk;
+
+    return '<section class="bsh-section"><div class="bsh-card"><div class="bsh-xp">' +
+      '<div class="bsh-xp__side">' +
+        '<div class="bsh-xp__now">' +
+          '<span class="bsh-lvl">LVL ' + L.level + '</span>' +
+          '<span class="bsh-xp__level">' + esc(L.title) + '</span>' +
+          '<span class="bsh-xp__count">' + L.exp + ' EXP</span>' +
+        '</div>' +
+        '<div class="bsh-xp__bar"><div class="bsh-xp__fill" style="width:' + L.pct + '%"></div></div>' +
+        '<div class="bsh-xp__hint">' +
+          (L.next
+            ? L.toNext + ' EXP to level ' + L.next.level + ' — ' + esc(L.next.title)
+            : 'Top level reached. Your profile is complete.') +
+        '</div>' +
+        (perk
+          ? '<div class="bsh-xp__perk">' +
+              '<b>Waiting at level ' + L.next.level + '</b>' +
+              '<span>' + esc(perk) + '</span>' +
+            '</div>'
+          : '') +
+      '</div>' +
+      '<div>' +
+        '<div class="bsh-tasks__title">Earn experience</div>' +
+        (tasks.length
+          ? tasks.map(function (t) {
+              return '<a class="bsh-task" href="#/profile">' +
+                '<span>' +
+                  '<span class="bsh-task__label">' + esc(t.label) + '</span>' +
+                  (t.hint ? '<span class="bsh-task__hint">' + esc(t.hint) + '</span>' : '') +
+                '</span>' +
+                '<span class="bsh-task__pts">+' + t.points + '</span>' +
+              '</a>';
+            }).join('')
+          : '<div class="bsh-tasks__done">Everything is filled in. Nothing left to earn.</div>') +
+      '</div>' +
+    '</div></div></section>';
+  }
+
   /* ===================================================================
      SCREEN: HOME
      =================================================================== */
@@ -822,6 +980,8 @@
             ' publishes for its clients lives here: guides, procedures and paperwork ' +
             'for launching and running your venue.</p>' +
         '</section>' +
+
+        xpCard() +
 
         '<section class="bsh-section"><div class="bsh-cards">' +
           '<a class="bsh-shortcut" href="#/kb">' +
@@ -854,12 +1014,18 @@
           '<div class="bsh-card bsh-card--flat" style="margin-top:18px">' +
             (recent.length
               ? recent.map(function (a) {
-                  var c = catById(a.category_id);
+                  var c      = catById(a.category_id);
+                  var locked = a.unlocked === false;
                   return '<a class="bsh-recent__row" href="#/kb/a/' + esc(a.slug) + '">' +
                     (c ? '<span class="bsh-badge">' + esc(c.title) + '</span>' : '') +
-                    '<span><span class="bsh-recent__title">' + esc(a.title) + '</span>' +
-                    (a.summary ? '<span class="bsh-recent__sum">' + esc(a.summary) + '</span>' : '') +
-                    '</span><span class="bsh-recent__arrow">→</span></a>';
+                    '<span class="bsh-recent__body">' +
+                      '<span class="bsh-recent__title">' + esc(a.title) + '</span>' +
+                      (a.summary ? '<span class="bsh-recent__sum">' + esc(a.summary) + '</span>' : '') +
+                    '</span>' +
+                    (locked
+                      ? '<span class="bsh-badge bsh-badge--pink">🔒 Level ' + a.min_level + '</span>'
+                      : '') +
+                    '<span class="bsh-recent__arrow">→</span></a>';
                 }).join('')
               : '<div class="bsh-empty"><div class="bsh-empty__icon">📭</div>Nothing published yet</div>') +
           '</div>' +
@@ -892,15 +1058,22 @@
       }).join('');
 
     var cards = list.map(function (a) {
-      var c = catById(a.category_id);
-      return '<a class="bsh-art" href="#/kb/a/' + esc(a.slug) + '">' +
+      var c      = catById(a.category_id);
+      var locked = a.unlocked === false;
+
+      return '<a class="bsh-art' + (locked ? ' bsh-art--locked' : '') +
+               '" href="#/kb/a/' + esc(a.slug) + '">' +
         '<div class="bsh-art__top">' +
           (c ? '<span class="bsh-badge">' + esc(c.title) + '</span>' : '') +
-          (a.reading_time ? '<span class="bsh-label">' + a.reading_time + ' min</span>' : '') +
+          (locked
+            ? '<span class="bsh-badge bsh-badge--pink">🔒 Level ' + a.min_level + '</span>'
+            : (a.reading_time ? '<span class="bsh-label">' + a.reading_time + ' min</span>' : '')) +
         '</div>' +
         '<div class="bsh-art__title">' + esc(a.title) + '</div>' +
         (a.summary ? '<div class="bsh-art__sum">' + esc(a.summary) + '</div>' : '') +
-        '<div class="bsh-art__more">Read →</div>' +
+        (locked
+          ? '<div class="bsh-art__lock">Unlocks at level ' + a.min_level + ' →</div>'
+          : '<div class="bsh-art__more">Read →</div>') +
       '</a>';
     }).join('');
 
@@ -963,11 +1136,12 @@
       .then(function (r) {
         if (r.error) throw r.error;
         if (!r.data) {
-          paint(header('kb') +
-            '<div class="bsh-wrap bsh-kb"><a class="bsh-back" href="#/kb">← All articles</a>' +
-            '<div class="bsh-card"><div class="bsh-empty">' +
-            '<div class="bsh-empty__icon">🤷</div>Article not found</div></div></div>');
-          bindLogout();
+          /* RLS returns nothing for an article above the client's level.
+             The catalogue still knows it exists, so say what it is and
+             what it costs rather than pretending it is missing. */
+          var teaser = (S.arts || []).filter(function (x) { return x.slug === slug; })[0];
+          if (teaser && teaser.unlocked === false) lockedScreen(teaser);
+          else notFound();
           return null;
         }
         article = r.data;
@@ -1019,6 +1193,49 @@
     }
   }
 
+  function notFound() {
+    paint(header('kb') +
+      '<div class="bsh-wrap bsh-kb"><a class="bsh-back" href="#/kb">← All articles</a>' +
+      '<div class="bsh-card"><div class="bsh-empty">' +
+      '<div class="bsh-empty__icon">🤷</div>Article not found</div></div></div>');
+    bindLogout();
+  }
+
+  /* The locked article: visible as a promise, unreadable until earned. */
+  function lockedScreen(row) {
+    var L      = levelInfo();
+    var needed = expForLevel(row.min_level);
+    var short  = Math.max(0, needed - L.exp);
+    var pct    = needed > 0 ? Math.min(100, Math.round(L.exp / needed * 100)) : 100;
+
+    paint(header('kb') +
+      '<div class="bsh-wrap bsh-kb">' +
+        '<a class="bsh-back" href="#/kb">← All articles</a>' +
+        '<div class="bsh-card" style="max-width:720px;margin:0 auto">' +
+          '<div class="bsh-locked">' +
+            '<div class="bsh-locked__icon">🔒</div>' +
+            '<h1 class="bsh-h2">' + esc(row.title) + '</h1>' +
+            (row.summary
+              ? '<p class="bsh-lead bsh-muted" style="max-width:540px;margin:12px auto 0">' +
+                esc(row.summary) + '</p>'
+              : '') +
+            '<p class="bsh-lead" style="margin-top:26px">' +
+              'Opens at <span class="bsh-accent">level ' + row.min_level + '</span>' +
+              (short > 0 ? ' — ' + short + ' EXP to go' : '') +
+            '</p>' +
+            '<div class="bsh-locked__bar">' +
+              '<div class="bsh-xp__bar"><div class="bsh-xp__fill" style="width:' + pct + '%"></div></div>' +
+              '<div class="bsh-xp__hint">' + L.exp + ' / ' + needed + ' EXP</div>' +
+            '</div>' +
+            '<a class="bsh-btn bsh-btn--accent" href="#/profile" style="margin-top:26px">' +
+              'Fill in your arena details</a>' +
+          '</div>' +
+        '</div>' +
+      '</div>');
+    bindLogout();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   /* ===================================================================
      SCREEN: PROFILE
      =================================================================== */
@@ -1026,11 +1243,29 @@
     var p = S.profile || {};
     var email = S.session.user.email;
 
-    function field(id, label, value, type, ph) {
+    /* An unfilled field advertises what it is worth; once earned the
+       badge disappears, so the form always shows what is still on offer. */
+    function pts(name) {
+      var r = (S.rules || []).filter(function (x) { return x.field === name; })[0];
+      if (!r) return '';
+      var v = (p[name] == null ? '' : String(p[name])).trim();
+      if (v.length >= (r.min_length || 1)) return '';
+      return '<span class="bsh-pts">+' + r.points + ' EXP</span>';
+    }
+
+    function field(id, name, label, type, ph) {
       return '<div class="bsh-field">' +
-        '<label class="bsh-field__label" for="' + id + '">' + label + '</label>' +
+        '<label class="bsh-field__label" for="' + id + '">' + label + pts(name) + '</label>' +
         '<input class="bsh-input" id="' + id + '" type="' + (type || 'text') +
-          '" value="' + esc(value || '') + '" placeholder="' + esc(ph || '') + '">' +
+          '" value="' + esc(p[name] || '') + '" placeholder="' + esc(ph || '') + '">' +
+      '</div>';
+    }
+
+    function area(id, name, label, ph) {
+      return '<div class="bsh-field">' +
+        '<label class="bsh-field__label" for="' + id + '">' + label + pts(name) + '</label>' +
+        '<textarea class="bsh-input" id="' + id + '" placeholder="' + esc(ph || '') + '">' +
+          esc(p[name] || '') + '</textarea>' +
       '</div>';
     }
 
@@ -1056,15 +1291,36 @@
             '</div>' +
 
             '<form id="bsh-form">' +
-              field('bsh-f-name', 'Full name', p.full_name, 'text', 'How should we address you?') +
+              field('bsh-f-name', 'full_name', 'Full name', 'text', 'How should we address you?') +
               '<div class="bsh-profile__row">' +
-                field('bsh-f-company', 'Venue name', p.company, 'text', 'Battle Start Camden') +
-                field('bsh-f-city', 'City', p.city, 'text', 'London') +
+                field('bsh-f-company', 'company', 'Venue name', 'text', 'Battle Start Camden') +
+                field('bsh-f-city', 'city', 'City', 'text', 'London') +
               '</div>' +
               '<div class="bsh-profile__row">' +
-                field('bsh-f-phone', 'Phone', p.phone, 'tel', '+44 20 0000 0000') +
-                field('bsh-f-tg', 'Telegram', p.telegram, 'text', '@username') +
+                field('bsh-f-phone', 'phone', 'Phone', 'tel', '+44 20 0000 0000') +
+                field('bsh-f-tg', 'telegram', 'Telegram', 'text', '@username') +
               '</div>' +
+
+              '<hr class="bsh-divider">' +
+              '<h3 class="bsh-h3">Your arena</h3>' +
+              '<p class="bsh-label" style="margin-bottom:18px">' +
+                'The more complete this is, the more of the knowledge base opens up.</p>' +
+
+              field('bsh-f-address', 'address', 'Full address', 'text', 'Street and building') +
+              '<div class="bsh-profile__row">' +
+                field('bsh-f-website', 'website', 'Website', 'url', 'https://') +
+                field('bsh-f-logo', 'logo_url', 'Logo', 'url', 'https://') +
+              '</div>' +
+              '<div class="bsh-profile__row">' +
+                field('bsh-f-fb', 'social_facebook', 'Facebook page', 'url', 'https://facebook.com/') +
+                field('bsh-f-ig', 'social_instagram', 'Instagram', 'text', '@arena') +
+              '</div>' +
+              field('bsh-f-tgch', 'social_telegram', 'Telegram channel', 'text', '@arena_channel') +
+              area('bsh-f-about', 'about', 'About the arena',
+                   'What makes your arena worth visiting? 80 characters or more.') +
+
+              '<hr class="bsh-divider">' +
+
               '<div class="bsh-field">' +
                 '<label class="bsh-field__label" for="bsh-f-email">Sign-in email</label>' +
                 '<input class="bsh-input" id="bsh-f-email" type="email" value="' + esc(email) + '" readonly>' +
@@ -1099,9 +1355,9 @@
 
           '<div>' +
             '<div class="bsh-tiles">' +
+              tile('Experience', 'Level ' + levelInfo().level + ' · ' + levelInfo().exp + ' EXP', true) +
               tile('Venue', p.company || 'Not set') +
-              tile('City', p.city || 'Not set') +
-              tile('Access status', p.status === 'suspended' ? 'Suspended' : 'Active', true) +
+              tile('Access status', p.status === 'suspended' ? 'Suspended' : 'Active') +
               tile('Member since', fmtDate(p.created_at || S.session.user.created_at)) +
             '</div>' +
             '<div class="bsh-card bsh-card--flat bsh-card--pad-sm">' +
@@ -1130,22 +1386,53 @@
       save.classList.add('is-busy');
       save.innerHTML = '<span class="bsh-spinner"></span>Saving…';
 
+      var before = levelInfo();
+
+      /* exp is a generated column — it is never sent, only read back. */
       var patch = {
-        id:        S.session.user.id,
-        full_name: val('bsh-f-name'),
-        company:   val('bsh-f-company'),
-        city:      val('bsh-f-city'),
-        phone:     val('bsh-f-phone'),
-        telegram:  val('bsh-f-tg')
+        id:               S.session.user.id,
+        full_name:        val('bsh-f-name'),
+        company:          val('bsh-f-company'),
+        city:             val('bsh-f-city'),
+        phone:            val('bsh-f-phone'),
+        telegram:         val('bsh-f-tg'),
+        address:          val('bsh-f-address'),
+        website:          val('bsh-f-website'),
+        logo_url:         val('bsh-f-logo'),
+        social_facebook:  val('bsh-f-fb'),
+        social_instagram: val('bsh-f-ig'),
+        social_telegram:  val('bsh-f-tgch'),
+        about:            val('bsh-f-about')
       };
 
       sb.from('profiles').upsert(patch).select().single().then(function (r) {
         save.classList.remove('is-busy');
         save.textContent = 'Save';
         if (r.error) { msg.innerHTML = alertHtml('error', humanError(r.error)); return; }
+
         S.profile = r.data;
-        screenProfile();
-        document.getElementById('bsh-msg').innerHTML = alertHtml('ok', 'Details saved');
+        var after  = levelInfo();
+        var gained = after.exp - before.exp;
+
+        /* A new level changes what the catalogue unlocks, so it is refetched. */
+        var done = function () {
+          screenProfile();
+          var box = document.getElementById('bsh-msg');
+          if (after.level > before.level) {
+            box.innerHTML = alertHtml('ok',
+              'Level ' + after.level + ' reached — ' + after.title + '. ' +
+              'New material is open in the knowledge base.');
+          } else if (gained > 0) {
+            box.innerHTML = alertHtml('ok',
+              'Saved. +' + gained + ' EXP' +
+              (after.next ? ' — ' + after.toNext + ' to level ' + after.next.level : ''));
+          } else {
+            box.innerHTML = alertHtml('ok', 'Details saved');
+          }
+        };
+
+        if (after.level !== before.level) { S.arts = null; loadIndex().then(done, done); }
+        else done();
       });
     });
 

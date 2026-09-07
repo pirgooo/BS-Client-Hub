@@ -22,6 +22,18 @@
       phone: '+44 20 7946 0210',
       telegram: '@Pirgooo',
       avatar_url: null,
+
+      /* Left empty on purpose: the demo starts at 50 EXP, ten short of
+         level 2, so filling one field flips the level and unlocks the
+         case study. */
+      address: null,
+      website: null,
+      social_facebook: null,
+      social_instagram: null,
+      social_telegram: null,
+      about: null,
+      logo_url: null,
+
       manager_name: 'Anna Kovaleva',
       manager_contact: '@bs_anna · +44 20 7946 0000',
       role: 'client',
@@ -170,7 +182,73 @@
           '',
           '> These documents are revised periodically. Check the date in the file header before printing a batch.'
         ].join('\n')
+      },
+      {
+        id: 'a6', category_id: 'c2', slug: 'break-even-in-four-months',
+        title: 'Case study: break-even in four months',
+        summary: 'The real numbers from one arena — traffic, average cheque, ad spend and the three decisions that moved them.',
+        reading_time: 9, sort_order: 5, is_published: true, cover_url: null, min_level: 2,
+        created_at: '2026-09-03T10:00:00Z', updated_at: '2026-09-03T10:00:00Z',
+        content_md: [
+          '## The starting position',
+          '',
+          'A 300 m² arena in a city of 600,000. Opened in March with no prior traffic and no local brand recognition.',
+          '',
+          '| Month | Guests | Average cheque | Revenue |',
+          '| --- | --- | --- | --- |',
+          '| 1 | 410 | 1,150 | 471,500 |',
+          '| 2 | 690 | 1,240 | 855,600 |',
+          '| 3 | 980 | 1,310 | 1,283,800 |',
+          '| 4 | 1,140 | 1,380 | 1,573,200 |',
+          '',
+          '## Decision one: birthdays before walk-ins',
+          '',
+          'Birthday bookings were **2.6 times** the average cheque and brought their own audience.',
+          '',
+          '> Repeat visits went from 8% to 31% between month one and month four. Nothing else moved the number that far.'
+        ].join('\n')
+      },
+      {
+        id: 'a7', category_id: 'c3', slug: 'ads-that-worked',
+        title: 'The ad creatives that actually worked',
+        summary: 'Six campaigns, what each one cost per booking, and why the two obvious ones failed.',
+        reading_time: 6, sort_order: 5, is_published: true, cover_url: null, min_level: 3,
+        created_at: '2026-09-04T10:00:00Z', updated_at: '2026-09-04T10:00:00Z',
+        content_md: [
+          '## What we measured',
+          '',
+          'Cost per completed booking, not per click.',
+          '',
+          '| Creative | Cost per booking | Verdict |',
+          '| --- | --- | --- |',
+          '| Kids mid-game, filmed from behind | 340 | Best performer |',
+          '| Gameplay capture from inside the headset | 1,120 | Failed |',
+          '',
+          'The winners all show **a real person having a good time in a real room**.'
+        ].join('\n')
       }
+    ],
+
+    levels: [
+      { level: 1, min_exp:   0, title: 'Newcomer', perk: null },
+      { level: 2, min_exp:  60, title: 'Operator', perk: 'Case study: how an arena reached break-even in four months' },
+      { level: 3, min_exp: 110, title: 'Veteran',  perk: 'Marketing playbooks and the ad creatives that worked' },
+      { level: 4, min_exp: 145, title: 'Legend',   perk: 'A direct line to the Battle Start operations team' }
+    ],
+
+    exp_rules: [
+      { field: 'full_name',        points: 10, label: 'Your name',        hint: 'How the Battle Start team should address you', min_length: 1,  sort_order: 10 },
+      { field: 'company',          points: 10, label: 'Venue name',       hint: 'The name guests see',                          min_length: 1,  sort_order: 20 },
+      { field: 'city',             points: 10, label: 'City',             hint: 'Where the arena operates',                     min_length: 1,  sort_order: 30 },
+      { field: 'address',          points: 15, label: 'Full address',     hint: 'Street and building, as in the maps listing',  min_length: 1,  sort_order: 40 },
+      { field: 'phone',            points: 10, label: 'Phone',            hint: 'The number guests call',                       min_length: 1,  sort_order: 50 },
+      { field: 'telegram',         points: 10, label: 'Telegram',         hint: 'For your manager to reach you quickly',        min_length: 1,  sort_order: 60 },
+      { field: 'website',          points: 15, label: 'Website',          hint: 'Your arena page or booking site',              min_length: 1,  sort_order: 70 },
+      { field: 'social_facebook',  points: 10, label: 'Facebook page',    hint: 'The public page for your arena',               min_length: 1,  sort_order: 80 },
+      { field: 'social_instagram', points: 10, label: 'Instagram',        hint: 'The arena account',                            min_length: 1,  sort_order: 90 },
+      { field: 'social_telegram',  points: 10, label: 'Telegram channel', hint: 'Where you post news for guests',               min_length: 1,  sort_order: 100 },
+      { field: 'about',            points: 20, label: 'About the arena',  hint: 'A short description, 80 characters or more',   min_length: 80, sort_order: 110 },
+      { field: 'logo_url',         points: 15, label: 'Logo',             hint: 'A link to your logo file',                     min_length: 1,  sort_order: 120 }
     ],
 
     kb_files: [
@@ -197,6 +275,26 @@
   }
 
   function delay(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+  /* Mirrors the generated exp column: points for every filled field.
+     Computed on read, never stored — same as in PostgreSQL. */
+  function computeExp(profile) {
+    return db.exp_rules.reduce(function (sum, r) {
+      var v = (profile[r.field] == null ? '' : String(profile[r.field])).trim();
+      return sum + (v.length >= (r.min_length || 1) ? r.points : 0);
+    }, 0);
+  }
+
+  /* Mirrors public.current_level() */
+  function currentLevel() {
+    var s = readSession();
+    if (!s) return 1;
+    var me = db.profiles.filter(function (r) { return r.id === s.user.id; })[0];
+    if (!me) return 1;
+    var exp = computeExp(me), lvl = 1;
+    db.levels.forEach(function (l) { if (exp >= l.min_exp && l.level > lvl) lvl = l.level; });
+    return lvl;
+  }
 
   /* --------------------- query builder --------------------- */
   function Query(table) {
@@ -247,16 +345,45 @@
         found.created_at = found.updated_at = new Date().toISOString();
         store.push(found);
       }
-      return { data: JSON.parse(JSON.stringify(found)), error: null };
+      var out = JSON.parse(JSON.stringify(found));
+      if (this.table === 'profiles') out.exp = computeExp(found);
+      return { data: out, error: null };
     }
 
     /* --- read --- */
-    var rows = (db[this.table] || []).slice();
+    var rows;
+
+    if (this.table === 'kb_catalog') {
+      /* The view: every published article, no body, with the flag saying
+         whether this client may open it. */
+      rows = db.kb_articles.filter(function (a) { return a.is_published; }).map(function (a) {
+        return {
+          id: a.id, slug: a.slug, title: a.title, summary: a.summary,
+          category_id: a.category_id, reading_time: a.reading_time,
+          min_level: a.min_level || 1, sort_order: a.sort_order,
+          created_at: a.created_at,
+          unlocked: (a.min_level || 1) <= currentLevel()
+        };
+      });
+    } else {
+      rows = (db[this.table] || []).slice();
+    }
 
     /* a client sees only their own profile — emulating RLS */
     if (this.table === 'profiles') {
       var s = readSession();
-      rows = rows.filter(function (r) { return s && r.id === s.user.id; });
+      rows = rows.filter(function (r) { return s && r.id === s.user.id; })
+                 .map(function (r) {
+                   var copy = JSON.parse(JSON.stringify(r));
+                   copy.exp = computeExp(r);      /* generated, never stored */
+                   return copy;
+                 });
+    }
+
+    /* the level gate on article bodies, as the RLS policy does it */
+    if (this.table === 'kb_articles') {
+      var lvl = currentLevel();
+      rows = rows.filter(function (a) { return (a.min_level || 1) <= lvl; });
     }
 
     this.filters.forEach(function (f) {

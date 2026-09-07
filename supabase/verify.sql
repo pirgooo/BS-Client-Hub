@@ -47,10 +47,25 @@ with c as (
          (select count(*)::text from public.profiles),
          (select count(*)::text from auth.users)
 
+  -- Experience: exp must be a generated column, or a client could simply
+  -- write themselves to the top level through the API.
+  union all select 14, 'profiles.exp is generated (cannot be written)',
+         (select case when attgenerated = 's' then 'yes' else 'no' end
+            from pg_attribute
+           where attrelid = 'public.profiles'::regclass and attname = 'exp'), 'yes'
+  union all select 15, 'Levels defined',
+         (select count(*)::text from public.levels), '4'
+  union all select 16, 'Scoring rules defined',
+         (select count(*)::text from public.exp_rules), '12'
+  union all select 17, 'Catalogue view exists',
+         (select count(*)::text from pg_views where schemaname='public' and viewname='kb_catalog'), '1'
+
   -- Content counts: informational, they depend on whether you ran seed.sql
-  union all select 14, 'Rows: kb_categories', (select count(*)::text from public.kb_categories), 'any'
-  union all select 15, 'Rows: kb_articles',   (select count(*)::text from public.kb_articles),   'any'
-  union all select 16, 'Rows: kb_files',      (select count(*)::text from public.kb_files),      'any'
+  union all select 18, 'Rows: kb_categories', (select count(*)::text from public.kb_categories), 'any'
+  union all select 19, 'Rows: kb_articles',   (select count(*)::text from public.kb_articles),   'any'
+  union all select 20, 'Rows: kb_files',      (select count(*)::text from public.kb_files),      'any'
+  union all select 21, 'Rows: locked articles (min_level > 1)',
+         (select count(*)::text from public.kb_articles where min_level > 1), 'any'
 )
 select
   check_name,

@@ -149,6 +149,86 @@ private bucket and signed links instead.
 
 ---
 
+## Experience and levels
+
+The hub rewards a client for describing their arena properly: every filled field
+is worth experience, and experience opens material that is otherwise unreadable.
+
+### Why the experience cannot be faked
+
+A client can edit their own profile through the API — that is the whole point of
+the profile screen. So a plain `exp` integer would simply be set to 9999 by
+anyone who opened the network tab.
+
+Instead `profiles.exp` is a **generated column**: PostgreSQL computes it from the
+profile's own fields and rejects any attempt to write to it. Filling a field in
+*is* the only way to earn the points. The browser never sends `exp`, it only
+reads it back.
+
+The same applies to the locked material. Hiding an article in the interface
+would be theatre — the row is still one API call away. Instead the RLS policy on
+`kb_articles` carries `min_level <= public.current_level()`, so a locked article
+returns no rows at all, body included.
+
+That creates a second problem: a locked article has to be *advertised* to be
+tempting, and RLS works per row, not per column. The `kb_catalog` view solves it
+— it runs with its owner's rights, so it lists every published article with its
+title, summary and required level, and it simply never selects `content_md`.
+Titles tempt; bodies stay shut.
+
+### What earns what
+
+Points live in `public.exp_rules`, so the "what to fill in next" list on the home
+screen is rendered from the same numbers the database scores with.
+
+| Field | Points | | Field | Points |
+| --- | --- | --- | --- | --- |
+| Your name | 10 | | Website | 15 |
+| Venue name | 10 | | Facebook page | 10 |
+| City | 10 | | Instagram | 10 |
+| Full address | 15 | | Telegram channel | 10 |
+| Phone | 10 | | About the arena (80+ chars) | 20 |
+| Telegram | 10 | | Logo | 15 |
+
+A fully described arena is worth **145 EXP**.
+
+### Levels
+
+Thresholds and rewards live in `public.levels`. `perk` is the teaser a client
+sees for the level they have not reached yet, so make it worth the effort.
+
+| Level | From | Title | What opens |
+| --- | --- | --- | --- |
+| 1 | 0 | Newcomer | — |
+| 2 | 60 | Operator | The break-even case study |
+| 3 | 110 | Veteran | Marketing playbooks and ad creatives |
+| 4 | 145 | Legend | A direct line to the ops team |
+
+### Locking an article
+
+Set `kb_articles.min_level` in the Table Editor. `1` means open to everyone
+signed in; anything higher locks it, and the catalogue starts advertising it as
+a reward.
+
+### Changing the numbers
+
+Thresholds, titles and perks are ordinary rows — edit `levels` and `exp_rules`
+in the Table Editor and the interface follows on the next load.
+
+Changing what a **field** is worth is different: the weights are baked into the
+generated column, because a generated expression cannot read from a table. Edit
+the expression in `schema.sql`, then drop the column before re-running, since
+`ADD COLUMN IF NOT EXISTS` will not rewrite an expression that already exists:
+
+```sql
+alter table public.profiles drop column if exists exp;
+```
+
+Then re-run `schema.sql` and update the matching row in `exp_rules` so the
+interface shows the same number the database awards.
+
+---
+
 ## Step 6 — Managing content
 
 Everything is edited from **Table Editor** — no redeploy, no Tilda changes.
@@ -211,8 +291,10 @@ separately — being signed in on one says nothing about the other.
 ```
 hub/
 ├── supabase/
-│   ├── schema.sql              tables, triggers, RLS policies
-│   └── seed.sql                demo content (optional)
+│   ├── schema.sql              tables, triggers, RLS, experience rules
+│   ├── seed.sql                demo content, locked material included
+│   ├── verify.sql              post-install check
+│   └── fix-duplicate-files.sql one-off repair for a doubled seed
 ├── tilda/
 │   └── battle-start-hub.html   THE HUB — paste this one file into Tilda
 ├── preview/

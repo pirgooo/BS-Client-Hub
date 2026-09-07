@@ -148,3 +148,94 @@ from (values
 ) as v(article_slug, title, url, kind, size_label, sort_order)
 join public.kb_articles a on a.slug = v.article_slug
 on conflict (article_id, url) do nothing;
+
+
+-- =====================================================================
+--  LOCKED MATERIAL — the reason to fill the profile in
+--  These sit behind an experience level. The catalogue advertises them;
+--  RLS keeps the body unreadable until the client earns the level.
+-- =====================================================================
+insert into public.kb_articles
+  (category_id, slug, title, summary, reading_time, min_level, sort_order, content_md)
+select c.id, v.slug, v.title, v.summary, v.reading_time, v.min_level, v.sort_order, v.content_md
+from (values
+  ('operations', 'break-even-in-four-months', 'Case study: break-even in four months',
+   'The real numbers from one arena — traffic, average cheque, ad spend and the three decisions that moved them.',
+   9, 2, 5,
+$md$## The starting position
+
+A 300 m² arena in a city of 600,000. Opened in March with no prior traffic and no local brand recognition.
+
+| Month | Guests | Average cheque | Revenue |
+| --- | --- | --- | --- |
+| 1 | 410 | 1,150 | 471,500 |
+| 2 | 690 | 1,240 | 855,600 |
+| 3 | 980 | 1,310 | 1,283,800 |
+| 4 | 1,140 | 1,380 | 1,573,200 |
+
+## Decision one: birthdays before walk-ins
+
+Walk-in traffic is cheap to acquire and cheap in value. Birthday bookings
+were **2.6 times** the average cheque and came with their own audience —
+every party put ten to fifteen new families in the room.
+
+The whole first month of advertising was pointed at parents, not gamers.
+
+## Decision two: cut the discount, add the hour
+
+Discounting the session price trained guests to wait for the next sale.
+Instead the arena kept the price and added a free half-hour on weekday
+mornings — the slots that were empty anyway.
+
+Occupancy on those slots went from 14% to 61% without touching the rate.
+
+## Decision three: the operator is the product
+
+Guests rated the operator's briefing higher than the games themselves.
+The arena moved to two operators per shift in month two — the payroll
+increase paid for itself in repeat bookings within five weeks.
+
+> Repeat visits went from 8% to 31% between month one and month four. Nothing else moved the number that far.
+
+## What to copy
+
+- Point the first advertising month at birthdays, not at general awareness.
+- Never discount the session price; give away time in empty slots instead.
+- Staff for service quality before you staff for capacity.
+$md$),
+
+  ('marketing', 'ads-that-worked', 'The ad creatives that actually worked',
+   'Six campaigns, what each one cost per booking, and why the two obvious ones failed.',
+   6, 3, 5,
+$md$## What we measured
+
+Cost per completed booking, not per click. Every campaign ran for at least three weeks on the same budget.
+
+| Creative | Cost per booking | Verdict |
+| --- | --- | --- |
+| Kids mid-game, filmed from behind | 340 | Best performer |
+| Parent watching, child playing | 390 | Strong for birthdays |
+| Gameplay capture from inside the headset | 1,120 | Failed |
+| Price-led banner | 1,480 | Failed |
+| Operator explaining the safety briefing | 520 | Good for corporates |
+| Empty arena, wide shot | 890 | Weak |
+
+## Why the obvious ones failed
+
+**In-headset footage** looks impressive to people who already play VR. To
+everyone else it reads as a video game, and a video game is something you
+have at home for free.
+
+**Price-led banners** attract people comparing prices, which is the one
+audience that will not come back at full rate.
+
+## The pattern
+
+The winners all show **a real person having a good time in a real room**.
+The losers show the technology. Sell the afternoon out, not the hardware.
+$md$)
+) as v(cat_slug, slug, title, summary, reading_time, min_level, sort_order, content_md)
+join public.kb_categories c on c.slug = v.cat_slug
+on conflict (slug) do update
+  set min_level = excluded.min_level,
+      summary   = excluded.summary;
