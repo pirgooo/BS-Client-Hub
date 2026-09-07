@@ -23,8 +23,15 @@ create table if not exists public.profiles (
   phone           text,
   telegram        text,
   avatar_url      text,
-  manager_name    text,                       -- dedicated Battle Start manager
-  manager_contact text,
+  manager_name     text,                      -- dedicated Battle Start manager
+  manager_contact  text,
+  manager_whatsapp text,                      -- digits only, e.g. 447700900123
+
+  -- Subscription, filled in by an administrator. Free text on purpose:
+  -- the plan is whatever was actually agreed, not an item from a list.
+  plan               text,
+  subscription_from  date,
+  subscription_until date,
 
   -- The arena's public face. Filling these is what earns experience;
   -- see the exp column below.
@@ -70,6 +77,10 @@ alter table public.profiles add column if not exists social_instagram text;
 alter table public.profiles add column if not exists social_telegram  text;
 alter table public.profiles add column if not exists about            text;
 alter table public.profiles add column if not exists logo_url         text;
+alter table public.profiles add column if not exists manager_whatsapp   text;
+alter table public.profiles add column if not exists plan               text;
+alter table public.profiles add column if not exists subscription_from  date;
+alter table public.profiles add column if not exists subscription_until date;
 
 -- ---------------------------------------------------------------------
 -- 2. KNOWLEDGE BASE: CATEGORIES
@@ -200,16 +211,21 @@ returns trigger
 language plpgsql
 as $$
 begin
-  if auth.role() = 'service_role' then
+  -- The server and an administrator may set these; a client may not.
+  if auth.role() = 'service_role' or public.is_admin() then
     return new;
   end if;
-  new.id              := old.id;
-  new.email           := old.email;
-  new.role            := old.role;
-  new.status          := old.status;
-  new.manager_name    := old.manager_name;
-  new.manager_contact := old.manager_contact;
-  new.created_at      := old.created_at;
+  new.id                 := old.id;
+  new.email              := old.email;
+  new.role               := old.role;
+  new.status             := old.status;
+  new.manager_name       := old.manager_name;
+  new.manager_contact    := old.manager_contact;
+  new.manager_whatsapp   := old.manager_whatsapp;
+  new.plan               := old.plan;
+  new.subscription_from  := old.subscription_from;
+  new.subscription_until := old.subscription_until;
+  new.created_at         := old.created_at;
   return new;
 end;
 $$;
@@ -311,6 +327,22 @@ comment on column public.profiles.exp is
 
 -- The caller's level. SECURITY DEFINER so it can read the profile from
 -- inside a policy on another table without tripping over RLS.
+-- Is the caller an administrator? SECURITY DEFINER so it can read the
+-- role from inside a policy on profiles without recursing into that same
+-- policy.
+create or replace function public.is_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.profiles
+    where id = auth.uid() and role = 'admin'
+  );
+$$;
+
 create or replace function public.current_level()
 returns integer
 language sql
@@ -342,13 +374,13 @@ alter table public.exp_rules     enable row level security;
 drop policy if exists "profiles: read own"   on public.profiles;
 create policy "profiles: read own" on public.profiles
   for select to authenticated
-  using (auth.uid() = id);
+  using (auth.uid() = id or public.is_admin());
 
 drop policy if exists "profiles: update own" on public.profiles;
 create policy "profiles: update own" on public.profiles
   for update to authenticated
-  using (auth.uid() = id)
-  with check (auth.uid() = id);
+  using (auth.uid() = id or public.is_admin())
+  with check (auth.uid() = id or public.is_admin());
 
 drop policy if exists "profiles: insert own" on public.profiles;
 create policy "profiles: insert own" on public.profiles
@@ -370,7 +402,7 @@ create policy "kb_articles: read published" on public.kb_articles
   for select to authenticated
   using (
     is_published
-    and min_level <= public.current_level()   -- locked articles stay unreadable
+    and (min_level <= public.current_level() or public.is_admin())
     and exists (
       select 1 from public.profiles p
       where p.id = auth.uid() and p.status = 'active'

@@ -7,9 +7,16 @@
 (function () {
   'use strict';
 
-  var DEMO_EMAIL = 'demo@battlestart.com';
-  var DEMO_PASS  = 'demo1234';
-  var KEY        = 'bsh-preview-session';
+  var DEMO_EMAIL  = 'demo@battlestart.com';
+  var DEMO_PASS   = 'demo1234';
+  var ADMIN_EMAIL = 'admin@battlestart.com';
+  var ADMIN_PASS  = 'admin1234';
+  var KEY         = 'bsh-preview-session';
+
+  /* Accounts the stub will let in. The Edge Function stub adds to this. */
+  var ACCOUNTS = {};
+  ACCOUNTS[DEMO_EMAIL]  = { password: DEMO_PASS,  id: 'demo-user-0001' };
+  ACCOUNTS[ADMIN_EMAIL] = { password: ADMIN_PASS, id: 'demo-admin-0001' };
 
   /* ------------------------- data ------------------------- */
   var db = {
@@ -36,10 +43,31 @@
 
       manager_name: 'Anna Kovaleva',
       manager_contact: '@bs_anna · +44 20 7946 0000',
+      manager_whatsapp: '447700900123',
+      plan: 'Standard 300',
+      subscription_from: '2026-03-01',
+      subscription_until: '2026-09-30',
       role: 'client',
       status: 'active',
       created_at: '2026-03-14T09:00:00Z',
       updated_at: '2026-09-01T12:00:00Z'
+    }, {
+      id: 'demo-admin-0001',
+      email: ADMIN_EMAIL,
+      full_name: 'Anna Kovaleva',
+      company: 'Battle Start HQ',
+      city: 'London',
+      phone: '+44 20 7946 0000',
+      telegram: '@bs_anna',
+      avatar_url: null,
+      address: null, website: null, social_facebook: null,
+      social_instagram: null, social_telegram: null, about: null, logo_url: null,
+      manager_name: null, manager_contact: null, manager_whatsapp: null,
+      plan: null, subscription_from: null, subscription_until: null,
+      role: 'admin',
+      status: 'active',
+      created_at: '2026-01-10T09:00:00Z',
+      updated_at: '2026-01-10T09:00:00Z'
     }],
 
     kb_categories: [
@@ -267,12 +295,25 @@
     if (s) sessionStorage.setItem(KEY, JSON.stringify(s));
     else   sessionStorage.removeItem(KEY);
   }
-  function makeSession() {
+  function makeSession(email) {
+    var acc = ACCOUNTS[email];
+    var row = db.profiles.filter(function (p) { return p.id === acc.id; })[0];
     return {
       access_token: 'preview-token',
-      user: { id: 'demo-user-0001', email: DEMO_EMAIL, created_at: '2026-03-14T09:00:00Z' }
+      user: {
+        id: acc.id,
+        email: email,
+        created_at: (row && row.created_at) || new Date().toISOString()
+      }
     };
   }
+
+  function me() {
+    var s = readSession();
+    if (!s) return null;
+    return db.profiles.filter(function (p) { return p.id === s.user.id; })[0] || null;
+  }
+  function callerIsAdmin() { var m = me(); return !!(m && m.role === 'admin'); }
 
   function delay(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 
@@ -326,9 +367,26 @@
   Query.prototype.single = function () { this.mode = 'single'; return this; };
   Query.prototype.maybeSingle = function () { this.mode = 'maybe'; return this; };
   Query.prototype.upsert = function (row) { this.writeRow = row; return this; };
+  Query.prototype.update = function (row) { this.patchRow = row; return this; };
 
   Query.prototype._exec = function () {
     var self = this;
+
+    /* --- update matching rows --- */
+    if (this.patchRow) {
+      var store = db[this.table] || [];
+      var hit = store.filter(function (r) {
+        return self.filters.every(function (f) { return r[f[0]] === f[1]; });
+      });
+      if (!hit.length) return { data: null, error: null };
+      hit.forEach(function (r) {
+        for (var k in self.patchRow) { r[k] = self.patchRow[k]; }
+        r.updated_at = new Date().toISOString();
+      });
+      var one = JSON.parse(JSON.stringify(hit[0]));
+      if (this.table === 'profiles') one.exp = computeExp(hit[0]);
+      return { data: one, error: null };
+    }
 
     /* --- write --- */
     if (this.writeRow) {
@@ -372,7 +430,8 @@
     /* a client sees only their own profile — emulating RLS */
     if (this.table === 'profiles') {
       var s = readSession();
-      rows = rows.filter(function (r) { return s && r.id === s.user.id; })
+      var admin = callerIsAdmin();
+      rows = rows.filter(function (r) { return s && (admin || r.id === s.user.id); })
                  .map(function (r) {
                    var copy = JSON.parse(JSON.stringify(r));
                    copy.exp = computeExp(r);      /* generated, never stored */
@@ -438,6 +497,52 @@
     return {
       from: function (table) { return new Query(table); },
 
+      /* Stands in for the admin-create-client Edge Function, including
+         its authorisation check — an ordinary client gets refused here
+         exactly as it would on the server. */
+      functions: {
+        invoke: function (name, opts) {
+          return delay(700).then(function () {
+            if (name !== 'admin-create-client') {
+              return { data: null, error: { message: 'No such function: ' + name } };
+            }
+            if (!callerIsAdmin()) {
+              return { data: { error: 'Administrators only' },
+                       error: { message: 'Administrators only', context: { status: 403 } } };
+            }
+
+            var b = (opts && opts.body) || {};
+            var mail = String(b.email || '').trim().toLowerCase();
+            if (ACCOUNTS[mail]) {
+              return { data: { error: 'That email already has an account' },
+                       error: { message: 'conflict', context: { status: 409 } } };
+            }
+
+            var id = 'demo-user-' + Math.random().toString(36).slice(2, 8);
+            ACCOUNTS[mail] = { password: b.password, id: id };
+            db.profiles.push({
+              id: id, email: mail,
+              full_name: b.full_name || null,
+              company: b.company || null,
+              city: b.city || null,
+              phone: null, telegram: null, avatar_url: null,
+              address: null, website: null, social_facebook: null,
+              social_instagram: null, social_telegram: null, about: null, logo_url: null,
+              manager_name: b.manager_name || null,
+              manager_contact: b.manager_contact || null,
+              manager_whatsapp: b.manager_whatsapp || null,
+              plan: b.plan || null,
+              subscription_from: null,
+              subscription_until: b.subscription_until || null,
+              role: 'client', status: 'active',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
+            return { data: { user_id: id, email: mail }, error: null };
+          });
+        }
+      },
+
       auth: {
         getSession: function () {
           return delay(120).then(function () {
@@ -446,9 +551,12 @@
         },
         signInWithPassword: function (creds) {
           return delay(500).then(function () {
-            var ok = creds.email.trim().toLowerCase() === DEMO_EMAIL && creds.password === DEMO_PASS;
-            if (!ok) return { data: null, error: { message: 'Invalid login credentials' } };
-            var s = makeSession();
+            var mail = String(creds.email || '').trim().toLowerCase();
+            var acc  = ACCOUNTS[mail];
+            if (!acc || acc.password !== creds.password) {
+              return { data: null, error: { message: 'Invalid login credentials' } };
+            }
+            var s = makeSession(mail);
             writeSession(s);
             return { data: { session: s, user: s.user }, error: null };
           });
@@ -467,5 +575,10 @@
   }
 
   window.supabase = { createClient: createClient };
-  window.BSH_PREVIEW = { email: DEMO_EMAIL, password: DEMO_PASS, db: db, reset: function () { writeSession(null); } };
+  window.BSH_PREVIEW = {
+    email: DEMO_EMAIL, password: DEMO_PASS,
+    adminEmail: ADMIN_EMAIL, adminPassword: ADMIN_PASS,
+    db: db,
+    reset: function () { writeSession(null); }
+  };
 })();

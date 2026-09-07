@@ -149,6 +149,60 @@ private bucket and signed links instead.
 
 ---
 
+## Administration
+
+An administrator manages client accounts from inside the hub: a **Clients**
+tab appears in the header, listing every account with its plan and paid-until
+date, and opening one gives a form where every value is typed in by hand.
+
+### Making someone an administrator
+
+**Table Editor → profiles →** set that row's `role` to `admin`. There is no
+button for this on purpose: the first administrator has to come from the
+Dashboard, so an account in the hub can never promote itself.
+
+### What an administrator can do
+
+- **Edit any client**: contact details, arena details, socials.
+- **Assign a manager**: name, contact, and a WhatsApp number. The number is
+  digits only with the country code (`447700900123`); the hub turns it into a
+  `wa.me` link shown to the client on their profile and home screen.
+- **Record a subscription**: plan and the dates it is paid from and until.
+  The plan is free text — whatever was actually agreed, not an item from a
+  list. Dates accept `2026-03-01` or `01.03.2026` and are normalised on save.
+- **Suspend access**: set `status` to `suspended` and RLS stops serving that
+  client the knowledge base, without deleting anything.
+
+A client sees the plan and the paid period on their own profile, with a badge
+that turns amber two weeks out and crimson once it lapses. They cannot edit any
+of it: the `protect_profile_fields` trigger reverts a client's writes to the
+manager and subscription fields.
+
+### Creating accounts — the Edge Function
+
+Creating a user needs the **service role key**, which bypasses RLS entirely and
+can never go near a browser. So account creation lives in an Edge Function that
+checks the caller is an administrator before it does anything.
+
+Deploy it once:
+
+```bash
+supabase functions deploy admin-create-client
+```
+
+Or paste `supabase/functions/admin-create-client/index.ts` into
+**Dashboard → Edge Functions → Deploy a new function**. `SUPABASE_URL` and
+`SUPABASE_SERVICE_ROLE_KEY` are provided by the platform — there is nothing to
+configure.
+
+Until it is deployed the rest of the admin area works normally, and **Add
+client** says so and points you at the Dashboard instead. Creating the account
+there by hand (Authentication → Users → Add user, with *Auto Confirm User*)
+gets the same result — the trigger still makes the profile, and it appears in
+the Clients list ready to edit.
+
+---
+
 ## Experience and levels
 
 The hub rewards a client for describing their arena properly: every filled field
@@ -294,7 +348,9 @@ hub/
 │   ├── schema.sql              tables, triggers, RLS, experience rules
 │   ├── seed.sql                demo content, locked material included
 │   ├── verify.sql              post-install check
-│   └── fix-duplicate-files.sql one-off repair for a doubled seed
+│   ├── fix-duplicate-files.sql one-off repair for a doubled seed
+│   └── functions/
+│       └── admin-create-client/  Edge Function: creates client accounts
 ├── tilda/
 │   └── battle-start-hub.html   THE HUB — paste this one file into Tilda
 ├── preview/

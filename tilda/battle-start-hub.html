@@ -344,6 +344,43 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
 @media (max-width: 960px) { .bsh-xp { grid-template-columns: minmax(0, 1fr); gap: 24px; } }
 
 /* ---------------------------------------------------------------------
+   ADMINISTRATION. Every value here is typed in by hand — the plan is
+   whatever was actually agreed, not an entry from a list.
+   --------------------------------------------------------------------- */
+.bsh-adm { padding: 44px 0 72px; }
+.bsh-adm__bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 24px; }
+.bsh-adm__search { flex: 1; min-width: 220px; max-width: 360px; }
+.bsh-adm__row {
+  display: flex; align-items: center; gap: 18px;
+  padding: 15px 0; border-top: 1px solid var(--bsh-line);
+}
+.bsh-adm__row:first-of-type { border-top: none; }
+.bsh-adm__row:hover { color: var(--bsh-pink); }
+.bsh-adm__who { flex: 1; min-width: 0; }
+.bsh-adm__name { font-weight: 700; font-size: 15px; }
+.bsh-adm__mail { font-size: 13px; color: var(--bsh-muted); display: block; margin-top: 1px; }
+.bsh-adm__cell { flex: none; width: 150px; font-size: 13px; color: var(--bsh-navy-2); }
+.bsh-adm__cell b { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--bsh-muted); margin-bottom: 3px; font-weight: 700; }
+.bsh-adm__arrow { flex: none; color: var(--bsh-muted); font-size: 20px; }
+.bsh-adm__group { margin: 30px 0 18px; }
+.bsh-adm__group h3 { font-size: 17px; font-weight: 800; margin: 0 0 4px; }
+.bsh-adm__group p { font-size: 13px; color: var(--bsh-muted); margin: 0; }
+
+.bsh-badge--ok   { background: #E6F7EE; color: #12784A; }
+.bsh-badge--warn { background: #FFF1E0; color: #A15600; }
+.bsh-badge--off  { background: var(--bsh-soft); color: var(--bsh-muted); }
+
+.bsh-sub { display: grid; gap: 4px; }
+.bsh-sub__plan { font-size: 18px; font-weight: 800; letter-spacing: -.01em; }
+.bsh-sub__dates { font-size: 13px; color: var(--bsh-muted); }
+
+@media (max-width: 860px) {
+  .bsh-adm__row { flex-wrap: wrap; gap: 10px 18px; }
+  .bsh-adm__who { flex-basis: 100%; }
+  .bsh-adm__cell { width: auto; min-width: 110px; }
+}
+
+/* ---------------------------------------------------------------------
    KNOWLEDGE BASE
    --------------------------------------------------------------------- */
 .bsh-kb { padding: 44px 0 72px; }
@@ -472,6 +509,7 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
     arts:     null,   /* catalogue rows, locked included */
     levels:   null,   /* level thresholds and perks    */
     rules:    null,   /* what earns experience         */
+    clients:  null,   /* every profile, administrators only */
     kbQuery:  '',     /* current search text           */
     recovery: false,  /* arrived from a recovery email */
     loaded:   false   /* profile + index fetched        */
@@ -621,7 +659,9 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
      DATA
      =================================================================== */
   function loadProfile() {
-    return sb.from('profiles').select('*').maybeSingle().then(function (r) {
+    /* Filter explicitly: an administrator's policy returns every profile,
+       so relying on RLS to leave exactly one row would break for them. */
+    return sb.from('profiles').select('*').eq('id', S.session.user.id).maybeSingle().then(function (r) {
       if (r.error) throw r.error;
       S.profile = r.data;
       return S.profile;
@@ -720,6 +760,7 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
       { hash: '#/kb',      label: 'Knowledge base', key: 'kb' },
       { hash: '#/profile', label: 'Profile',        key: 'profile' }
     ];
+    if (isAdmin()) links.push({ hash: '#/admin', label: 'Clients', key: 'admin' });
 
     return '<div class="bsh-wrap"><nav class="bsh-nav">' +
       '<a class="bsh-nav__logo" href="#/hub">Battle<br>Start</a>' +
@@ -908,6 +949,66 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
     });
   }
 
+  function isAdmin() { return !!(S.profile && S.profile.role === 'admin'); }
+
+  /* wa.me wants digits only, country code included. */
+  function waLink(num) {
+    var d = String(num == null ? '' : num).replace(/\D/g, '');
+    return d ? 'https://wa.me/' + d : null;
+  }
+
+  /* The manager block, used on the home screen and in the profile. */
+  function managerBlock(p) {
+    if (!p || !p.manager_name) return '<span class="bsh-muted">No manager assigned yet.</span>';
+    var wa = waLink(p.manager_whatsapp);
+    return '<b style="color:var(--bsh-navy)">' + esc(p.manager_name) + '</b>' +
+      (p.manager_contact ? '<br><span class="bsh-muted">' + esc(p.manager_contact) + '</span>' : '') +
+      (wa
+        ? '<br><a class="bsh-btn bsh-btn--ghost bsh-btn--sm" style="margin-top:12px" ' +
+          'href="' + esc(wa) + '" target="_blank" rel="noopener">WhatsApp</a>'
+        : '');
+  }
+
+  /* Dates are typed by hand, so both 2026-03-01 and 01.03.2026 are
+     accepted and normalised. Returns null for empty, false for nonsense. */
+  function parseDate(str) {
+    var v = (str || '').trim();
+    if (!v) return null;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+    var m = /^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})$/.exec(v);
+    if (m) {
+      var d = ('0' + m[1]).slice(-2), mo = ('0' + m[2]).slice(-2);
+      return m[3] + '-' + mo + '-' + d;
+    }
+    return false;
+  }
+
+  function fmtDay(iso) {
+    if (!iso) return '—';
+    try {
+      return new Date(iso + 'T00:00:00').toLocaleDateString('en-GB',
+        { day: '2-digit', month: 'short', year: 'numeric' });
+    } catch (e) { return iso; }
+  }
+
+  /* What to say about a client's subscription. */
+  function subInfo(p) {
+    if (!p || !p.subscription_until) {
+      return { kind: 'off', label: 'No subscription', days: null };
+    }
+    var end   = new Date(p.subscription_until + 'T23:59:59');
+    var days  = Math.ceil((end - new Date()) / 86400000);
+    if (days < 0)  return { kind: 'expired', label: 'Expired', days: days };
+    if (days <= 14) return { kind: 'soon',   label: days + ' days left', days: days };
+    return { kind: 'active', label: 'Active', days: days };
+  }
+
+  function subBadge(p) {
+    var i = subInfo(p);
+    var cls = i.kind === 'active' ? 'ok' : i.kind === 'soon' ? 'warn' : i.kind === 'expired' ? 'pink' : 'off';
+    return '<span class="bsh-badge bsh-badge--' + cls + '">' + esc(i.label) + '</span>';
+  }
+
   /* Experience needed to reach a given level. */
   function expForLevel(n) {
     var row = (S.levels || []).filter(function (l) { return l.level === n; })[0];
@@ -1001,11 +1102,7 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
           '<div class="bsh-shortcut bsh-shortcut--navy">' +
             '<div class="bsh-shortcut__icon">💬</div>' +
             '<div class="bsh-shortcut__title">Your manager</div>' +
-            '<div class="bsh-shortcut__text">' +
-              (p.manager_name
-                ? esc(p.manager_name) + (p.manager_contact ? '<br>' + esc(p.manager_contact) : '')
-                : 'No manager assigned yet. Post in the support chat.') +
-            '</div>' +
+            '<div class="bsh-shortcut__text">' + managerBlock(p) + '</div>' +
           '</div>' +
         '</div></section>' +
 
@@ -1356,18 +1453,27 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
           '<div>' +
             '<div class="bsh-tiles">' +
               tile('Experience', 'Level ' + levelInfo().level + ' · ' + levelInfo().exp + ' EXP', true) +
+              '<div class="bsh-tile">' +
+                '<div class="bsh-tile__label">Subscription</div>' +
+                '<div class="bsh-sub">' +
+                  '<span class="bsh-sub__plan">' + esc(p.plan || 'Not set') + '</span>' +
+                  (p.subscription_from || p.subscription_until
+                    ? '<span class="bsh-sub__dates">' + esc(fmtDay(p.subscription_from)) +
+                      ' — ' + esc(fmtDay(p.subscription_until)) + '</span>'
+                    : '') +
+                  '<span style="margin-top:8px">' +
+                    (p.status === 'suspended'
+                      ? '<span class="bsh-badge bsh-badge--pink">Access suspended</span>'
+                      : subBadge(p)) +
+                  '</span>' +
+                '</div>' +
+              '</div>' +
               tile('Venue', p.company || 'Not set') +
-              tile('Access status', p.status === 'suspended' ? 'Suspended' : 'Active') +
               tile('Member since', fmtDate(p.created_at || S.session.user.created_at)) +
             '</div>' +
             '<div class="bsh-card bsh-card--flat bsh-card--pad-sm">' +
               '<div class="bsh-tile__label" style="margin-bottom:10px">Your manager</div>' +
-              '<div style="font-size:14px">' +
-                (p.manager_name
-                  ? '<b>' + esc(p.manager_name) + '</b>' +
-                    (p.manager_contact ? '<br><span class="bsh-muted">' + esc(p.manager_contact) + '</span>' : '')
-                  : '<span class="bsh-muted">Not assigned yet</span>') +
-              '</div>' +
+              '<div style="font-size:14px">' + managerBlock(p) + '</div>' +
             '</div>' +
           '</div>' +
 
@@ -1469,6 +1575,379 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
   }
 
   /* ===================================================================
+     SCREENS: ADMINISTRATION
+     Reachable only with role = 'admin'. The database enforces that too —
+     the policies on profiles let an administrator read and write every
+     row, and let a client touch nothing but their own.
+     =================================================================== */
+
+  function loadClients(force) {
+    if (S.clients && !force) return Promise.resolve();
+    return sb.from('profiles').select('*').order('created_at', { ascending: false })
+      .then(function (r) {
+        if (r.error) throw r.error;
+        S.clients = r.data || [];
+      });
+  }
+
+  /* One labelled text box. Everything is typed in — no pickers, no lists. */
+  function af(id, label, value, ph, note) {
+    return '<div class="bsh-field">' +
+      '<label class="bsh-field__label" for="' + id + '">' + label + '</label>' +
+      '<input class="bsh-input" id="' + id + '" type="text" value="' + esc(value == null ? '' : value) +
+        '" placeholder="' + esc(ph || '') + '">' +
+      (note ? '<p class="bsh-label" style="margin-top:6px">' + note + '</p>' : '') +
+    '</div>';
+  }
+
+  function group(title, note) {
+    return '<div class="bsh-adm__group"><h3>' + title + '</h3>' +
+           (note ? '<p>' + note + '</p>' : '') + '</div>';
+  }
+
+  /* ---------------- the list ---------------- */
+  function screenAdminList() {
+    if (!isAdmin()) return go('#/hub');
+
+    paint(header('admin') +
+      '<div class="bsh-wrap bsh-adm"><div class="bsh-card">' +
+        '<div class="bsh-skel" style="height:24px;width:30%;margin-bottom:18px"></div>' +
+        '<div class="bsh-skel" style="height:56px;margin-bottom:10px"></div>' +
+        '<div class="bsh-skel" style="height:56px"></div>' +
+      '</div></div>');
+    bindLogout();
+
+    loadClients().then(function () {
+      var q = (S.adminQuery || '').toLowerCase();
+      var list = (S.clients || []).filter(function (c) {
+        if (!q) return true;
+        return [c.full_name, c.company, c.city, c.email, c.plan]
+          .join(' ').toLowerCase().indexOf(q) !== -1;
+      });
+
+      paint(header('admin') +
+        '<div class="bsh-wrap bsh-adm">' +
+          '<h1 class="bsh-h1"><span class="bsh-accent">Clients</span></h1>' +
+          '<p class="bsh-lead" style="margin-bottom:26px">' +
+            (S.clients || []).length + ' account' + ((S.clients || []).length === 1 ? '' : 's') +
+            ' — open one to edit it, or add a new one.</p>' +
+
+          '<div class="bsh-card">' +
+            '<div class="bsh-adm__bar">' +
+              '<div class="bsh-adm__search">' +
+                '<input class="bsh-input" id="bsh-adm-q" type="search" ' +
+                  'placeholder="Search by name, venue, city or plan" value="' + esc(S.adminQuery || '') + '">' +
+              '</div>' +
+              '<a class="bsh-btn bsh-btn--accent" href="#/admin/new">Add client</a>' +
+            '</div>' +
+
+            (list.length
+              ? list.map(function (c) {
+                  var i = subInfo(c);
+                  return '<a class="bsh-adm__row" href="#/admin/c/' + esc(c.id) + '">' +
+                    '<span class="bsh-adm__who">' +
+                      '<span class="bsh-adm__name">' + esc(c.full_name || 'Unnamed') +
+                        (c.role !== 'client' ? ' <span class="bsh-badge bsh-badge--blue">' + esc(c.role) + '</span>' : '') +
+                      '</span>' +
+                      '<span class="bsh-adm__mail">' + esc(c.email || '') + '</span>' +
+                    '</span>' +
+                    '<span class="bsh-adm__cell"><b>Venue</b>' + esc(c.company || '—') + '</span>' +
+                    '<span class="bsh-adm__cell"><b>Plan</b>' + esc(c.plan || '—') + '</span>' +
+                    '<span class="bsh-adm__cell"><b>Paid until</b>' + esc(fmtDay(c.subscription_until)) + '</span>' +
+                    '<span class="bsh-adm__cell">' + subBadge(c) + '</span>' +
+                    '<span class="bsh-adm__arrow">→</span>' +
+                  '</a>';
+                }).join('')
+              : '<div class="bsh-empty"><div class="bsh-empty__icon">🔍</div>Nobody matches that search</div>') +
+          '</div>' +
+        '</div>');
+
+      bindLogout();
+
+      var input = document.getElementById('bsh-adm-q');
+      input.addEventListener('input', function () {
+        S.adminQuery = input.value;
+        var pos = input.selectionStart;
+        screenAdminList();
+        var again = document.getElementById('bsh-adm-q');
+        if (again) { again.focus(); again.setSelectionRange(pos, pos); }
+      });
+    }).catch(function (e) {
+      paint(header('admin') + '<div class="bsh-wrap bsh-adm"><div class="bsh-card">' +
+            alertHtml('error', humanError(e)) + '</div></div>');
+      bindLogout();
+    });
+  }
+
+  /* ---------------- editing one client ---------------- */
+  /* flash: markup shown in the message slot once the form is on screen.
+     The render is asynchronous, so writing into #bsh-msg from the caller
+     would be wiped by the repaint that follows. */
+  function screenAdminEdit(id, flash) {
+    if (!isAdmin()) return go('#/hub');
+
+    return loadClients().then(function () {
+      var c = (S.clients || []).filter(function (x) { return x.id === id; })[0];
+      if (!c) {
+        paint(header('admin') + '<div class="bsh-wrap bsh-adm">' +
+          '<a class="bsh-back" href="#/admin">← All clients</a>' +
+          '<div class="bsh-card"><div class="bsh-empty">' +
+          '<div class="bsh-empty__icon">🤷</div>No such client</div></div></div>');
+        bindLogout();
+        return;
+      }
+
+      paint(header('admin') +
+        '<div class="bsh-wrap bsh-adm">' +
+          '<a class="bsh-back" href="#/admin">← All clients</a>' +
+          '<div class="bsh-card" style="max-width:860px">' +
+            '<div class="bsh-profile__head">' +
+              '<div class="bsh-profile__ava">' + esc(initials(c.full_name, c.email)) + '</div>' +
+              '<div>' +
+                '<div class="bsh-profile__name">' + esc(c.full_name || 'Unnamed') + '</div>' +
+                '<div class="bsh-profile__mail">' + esc(c.email || '') + ' · ' +
+                  'Level ' + levelOf(c) + ' · ' + expOf(c) + ' EXP</div>' +
+              '</div>' +
+              '<div style="margin-left:auto">' + subBadge(c) + '</div>' +
+            '</div>' +
+
+            '<div id="bsh-msg"></div>' +
+
+            '<form id="bsh-adm-form">' +
+
+              group('Subscription', 'Typed in by hand. Dates accept 2026-03-01 or 01.03.2026.') +
+              af('bsh-a-plan', 'Plan', c.plan, 'Whatever was agreed, in your own words') +
+              '<div class="bsh-profile__row">' +
+                af('bsh-a-from', 'Paid from', c.subscription_from, '2026-03-01') +
+                af('bsh-a-until', 'Paid until', c.subscription_until, '2026-09-01') +
+              '</div>' +
+
+              group('Manager') +
+              af('bsh-a-mgr', 'Manager name', c.manager_name, 'Anna Kovaleva') +
+              '<div class="bsh-profile__row">' +
+                af('bsh-a-mgrc', 'Contact', c.manager_contact, '@bs_anna · +44 20 7946 0000') +
+                af('bsh-a-mgrw', 'WhatsApp', c.manager_whatsapp, '447700900123',
+                   'Digits only, with the country code — it becomes a wa.me link.') +
+              '</div>' +
+
+              group('Client') +
+              af('bsh-a-name', 'Full name', c.full_name, 'Jane Doe') +
+              '<div class="bsh-profile__row">' +
+                af('bsh-a-company', 'Venue name', c.company, 'Battle Start Camden') +
+                af('bsh-a-city', 'City', c.city, 'London') +
+              '</div>' +
+              af('bsh-a-address', 'Address', c.address, 'Street and building') +
+              '<div class="bsh-profile__row">' +
+                af('bsh-a-phone', 'Phone', c.phone, '+44 20 0000 0000') +
+                af('bsh-a-tg', 'Telegram', c.telegram, '@username') +
+              '</div>' +
+              '<div class="bsh-profile__row">' +
+                af('bsh-a-web', 'Website', c.website, 'https://') +
+                af('bsh-a-logo', 'Logo', c.logo_url, 'https://') +
+              '</div>' +
+              '<div class="bsh-profile__row">' +
+                af('bsh-a-fb', 'Facebook', c.social_facebook, 'https://facebook.com/') +
+                af('bsh-a-ig', 'Instagram', c.social_instagram, '@arena') +
+              '</div>' +
+              af('bsh-a-tgch', 'Telegram channel', c.social_telegram, '@arena_channel') +
+
+              group('Access') +
+              '<div class="bsh-profile__row">' +
+                af('bsh-a-role', 'Role', c.role, 'client', 'client, staff or admin') +
+                af('bsh-a-status', 'Status', c.status, 'active',
+                   'active or suspended — suspending hides the knowledge base') +
+              '</div>' +
+
+              '<div class="bsh-profile__actions" style="margin-top:24px">' +
+                '<button class="bsh-btn bsh-btn--primary" type="submit" id="bsh-a-save">Save changes</button>' +
+                '<a class="bsh-btn bsh-btn--ghost" href="#/admin">Cancel</a>' +
+              '</div>' +
+            '</form>' +
+          '</div>' +
+        '</div>');
+
+      bindLogout();
+      if (flash) document.getElementById('bsh-msg').innerHTML = flash;
+
+      document.getElementById('bsh-adm-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var msg  = document.getElementById('bsh-msg');
+        var btn  = document.getElementById('bsh-a-save');
+        msg.innerHTML = '';
+
+        var from  = parseDate(v('bsh-a-from'));
+        var until = parseDate(v('bsh-a-until'));
+        if (from === false || until === false) {
+          msg.innerHTML = alertHtml('error', 'A date must look like 2026-03-01 or 01.03.2026');
+          return;
+        }
+        if (from && until && from > until) {
+          msg.innerHTML = alertHtml('error', 'The subscription ends before it starts');
+          return;
+        }
+
+        btn.classList.add('is-busy');
+        btn.innerHTML = '<span class="bsh-spinner"></span>Saving…';
+
+        var patch = {
+          plan:               v('bsh-a-plan')    || null,
+          subscription_from:  from,
+          subscription_until: until,
+          manager_name:       v('bsh-a-mgr')     || null,
+          manager_contact:    v('bsh-a-mgrc')    || null,
+          manager_whatsapp:   v('bsh-a-mgrw')    || null,
+          full_name:          v('bsh-a-name')    || null,
+          company:            v('bsh-a-company') || null,
+          city:               v('bsh-a-city')    || null,
+          address:            v('bsh-a-address') || null,
+          phone:              v('bsh-a-phone')   || null,
+          telegram:           v('bsh-a-tg')      || null,
+          website:            v('bsh-a-web')     || null,
+          logo_url:           v('bsh-a-logo')    || null,
+          social_facebook:    v('bsh-a-fb')      || null,
+          social_instagram:   v('bsh-a-ig')      || null,
+          social_telegram:    v('bsh-a-tgch')    || null,
+          role:               v('bsh-a-role')    || 'client',
+          status:             v('bsh-a-status')  || 'active'
+        };
+
+        sb.from('profiles').update(patch).eq('id', id).select().maybeSingle().then(function (r) {
+          btn.classList.remove('is-busy');
+          btn.textContent = 'Save changes';
+          if (r.error) { msg.innerHTML = alertHtml('error', humanError(r.error)); return; }
+
+          /* Refresh the cached list, and the admin's own profile if they
+             just edited themselves. */
+          if (id === S.session.user.id) S.profile = r.data;
+          loadClients(true).then(function () {
+            screenAdminEdit(id, alertHtml('ok', 'Saved'));
+          });
+        });
+
+        function v(elId) { return document.getElementById(elId).value.trim(); }
+      });
+    });
+  }
+
+  /* ---------------- adding a client ---------------- */
+  function screenAdminNew() {
+    if (!isAdmin()) return go('#/hub');
+
+    paint(header('admin') +
+      '<div class="bsh-wrap bsh-adm">' +
+        '<a class="bsh-back" href="#/admin">← All clients</a>' +
+        '<div class="bsh-card" style="max-width:720px">' +
+          '<h1 class="bsh-h2"><span class="bsh-accent">New</span> client</h1>' +
+          '<p class="bsh-lead bsh-muted" style="font-size:15px;margin-bottom:24px">' +
+            'The account is created straight away and confirmed — hand the ' +
+            'password over yourself. The client can change it in their profile.</p>' +
+
+          '<div id="bsh-msg"></div>' +
+
+          '<form id="bsh-new-form">' +
+            af('bsh-n-email', 'Email', '', 'client@example.com') +
+            af('bsh-n-pass', 'Password', '', 'At least 8 characters',
+               'Generate something and send it over a channel you trust.') +
+
+            group('Optional now, editable later') +
+            af('bsh-n-name', 'Full name', '', 'Jane Doe') +
+            '<div class="bsh-profile__row">' +
+              af('bsh-n-company', 'Venue name', '', 'Battle Start Camden') +
+              af('bsh-n-city', 'City', '', 'London') +
+            '</div>' +
+            '<div class="bsh-profile__row">' +
+              af('bsh-n-plan', 'Plan', '', 'Whatever was agreed') +
+              af('bsh-n-until', 'Paid until', '', '2026-09-01') +
+            '</div>' +
+            af('bsh-n-mgr', 'Manager name', '', 'Anna Kovaleva') +
+            '<div class="bsh-profile__row">' +
+              af('bsh-n-mgrc', 'Manager contact', '', '@bs_anna') +
+              af('bsh-n-mgrw', 'Manager WhatsApp', '', '447700900123') +
+            '</div>' +
+
+            '<div class="bsh-profile__actions" style="margin-top:24px">' +
+              '<button class="bsh-btn bsh-btn--accent" type="submit" id="bsh-n-save">Create account</button>' +
+              '<a class="bsh-btn bsh-btn--ghost" href="#/admin">Cancel</a>' +
+            '</div>' +
+          '</form>' +
+        '</div>' +
+      '</div>');
+
+    bindLogout();
+
+    document.getElementById('bsh-new-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var msg = document.getElementById('bsh-msg');
+      var btn = document.getElementById('bsh-n-save');
+      msg.innerHTML = '';
+
+      var email = v('bsh-n-email').toLowerCase();
+      var pass  = v('bsh-n-pass');
+      var until = parseDate(v('bsh-n-until'));
+
+      if (email.indexOf('@') === -1) { msg.innerHTML = alertHtml('error', 'Enter a valid email'); return; }
+      if (pass.length < 8)           { msg.innerHTML = alertHtml('error', 'The password must be at least 8 characters'); return; }
+      if (until === false)           { msg.innerHTML = alertHtml('error', 'A date must look like 2026-03-01 or 01.03.2026'); return; }
+
+      btn.classList.add('is-busy');
+      btn.innerHTML = '<span class="bsh-spinner"></span>Creating…';
+
+      /* Account creation needs the service role key, which must never be
+         in a page. The Edge Function holds it and checks the caller. */
+      sb.functions.invoke('admin-create-client', {
+        body: {
+          email: email, password: pass,
+          full_name:        v('bsh-n-name')    || null,
+          company:          v('bsh-n-company') || null,
+          city:             v('bsh-n-city')    || null,
+          plan:             v('bsh-n-plan')    || null,
+          subscription_until: until,
+          manager_name:     v('bsh-n-mgr')     || null,
+          manager_contact:  v('bsh-n-mgrc')    || null,
+          manager_whatsapp: v('bsh-n-mgrw')    || null
+        }
+      }).then(function (r) {
+        btn.classList.remove('is-busy');
+        btn.textContent = 'Create account';
+
+        if (r.error) {
+          msg.innerHTML = alertHtml('error', functionError(r));
+          return;
+        }
+        if (r.data && r.data.warning) {
+          msg.innerHTML = alertHtml('info', r.data.warning);
+        }
+        S.clients = null;
+        loadClients().then(function () { go('#/admin'); });
+      });
+
+      function v(elId) { return document.getElementById(elId).value.trim(); }
+    });
+  }
+
+  /* The function returns a readable reason in its body; surface that
+     rather than the generic "Edge Function returned a non-2xx status". */
+  function functionError(r) {
+    var ctx = r.error && r.error.context;
+    if (ctx && ctx.status === 404) {
+      return 'The admin-create-client function is not deployed yet. ' +
+             'Until it is, create the account in the Supabase Dashboard ' +
+             '(Authentication → Users → Add user).';
+    }
+    if (r.data && r.data.error) return r.data.error;
+    if (r.error && r.error.message) return r.error.message;
+    return 'Could not create the account';
+  }
+
+  /* Experience for any profile, not just the signed-in one. */
+  function expOf(p) { return (p && p.exp) || 0; }
+  function levelOf(p) {
+    var exp = expOf(p), lvl = 1;
+    (S.levels || []).forEach(function (l) { if (exp >= l.min_exp && l.level > lvl) lvl = l.level; });
+    return lvl;
+  }
+
+  /* ===================================================================
      ROUTING
      Every screen lives at a hash on this one page, so signing in and
      moving around never reloads and never leaves the block.
@@ -1503,6 +1982,11 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
 
     if (h === '/hub')     return screenHome();
     if (h === '/profile') return screenProfile();
+
+    if (h === '/admin')     return screenAdminList();
+    if (h === '/admin/new') return screenAdminNew();
+    var mCli = /^\/admin\/c\/(.+)$/.exec(h);
+    if (mCli) return screenAdminEdit(decodeURIComponent(mCli[1]));
 
     var mArt = /^\/kb\/a\/(.+)$/.exec(h);
     if (mArt) return screenArticle(decodeURIComponent(mArt[1]));
