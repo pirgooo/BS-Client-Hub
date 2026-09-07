@@ -1,4 +1,4 @@
-# Battle Start — client hub
+# Battle Start - Client Hub
 
 An invitation-only information hub for Battle Start clients: a knowledge base and
 a client profile, built as **one Tilda block driven by Supabase**.
