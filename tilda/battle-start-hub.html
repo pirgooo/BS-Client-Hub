@@ -47,6 +47,18 @@
 
   --bsh-font: 'Manrope', 'Golos Text', -apple-system, BlinkMacSystemFont,
               'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  /* The wordmark. It ships white, which would vanish on a white header,
+     so it is used as a mask rather than an image: the shape comes from
+     the file, the colour from whatever the element is set to. */
+  --bsh-logo: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbDpzcGFjZT0icHJlc2VydmUiIHdpZHRoPSIzNzguODgzIiBoZWlnaHQ9Ijc3LjI1ODMiIHZlcnNpb249IjEuMSIgc3R5bGU9InNoYXBlLXJlbmRlcmluZzpnZW9tZXRyaWNQcmVjaXNpb247IHRleHQtcmVuZGVyaW5nOmdlb21ldHJpY1ByZWNpc2lvbjsgaW1hZ2UtcmVuZGVyaW5nOm9wdGltaXplUXVhbGl0eTsgZmlsbC1ydWxlOmV2ZW5vZGQ7IGNsaXAtcnVsZTpldmVub2RkIiB2aWV3Qm94PSIwIDAgMzYxNzA3LjQgNzM3NTUuOSI+PGRlZnM+PHN0eWxlIHR5cGU9InRleHQvY3NzIj48IVtDREFUQVsKICAgIC5maWwxIHtmaWxsOiNGRkZGRkZ9CiAgICAuZmlsMCB7ZmlsbDojRkZGRkZGO2ZpbGwtcnVsZTpub256ZXJvfQogICBdXT48L3N0eWxlPjwvZGVmcz48ZyBpZD0iTGF5ZXJfeDAwMjBfMSI+PHBhdGggY2xhc3M9ImZpbDAiIGQ9Ik0xOTE5NTEuNSAzMzI1Ny45YzAsMjAwNi4yIDAsNDAxMi41IDAsNjAxOC42IC03MzM5LDAgLTE0Njc3LjksMCAtMjIwMTYuOCwwIDAsLTIwMDYuMSAwLC00MDEyLjQgMCwtNjAxOC42IDczMzguOSwwIDE0Njc3LjgsMCAyMjAxNi44LDB6bS0xNjM2Mi4yIDMwMDkuMmMtNjU1LjEsNDAyNS44IC0xMzEwLjEsODA1MS43IC0xOTY1LjIsMTIwNzcuNCAtMTEyMi45LC0xMjU3LjIgLTIyNDUuOCwtMjUxNC40IC0zMzY4LjYsLTM3NzEuNyA3NjczLjMsMCAxNTM0Ni43LDAgMjMwMjAsMCAwLDIyNDcgMCw0NDkzLjkgMCw2NzQwLjkgLTkzMTcuNSwwIC0xODYzNS4xLDAgLTI3OTUyLjcsMCA3NjIsLTUwMTUuNSAxNTI0LC0xMDAzMS4xIDIyODUuOSwtMTUwNDYuNiAtNzYxLjksLTUwMTUuNSAtMTUyMy45LC0xMDAzMSAtMjI4NS45LC0xNTA0Ni41IDkyNTAuMywwIDE4NTAwLjYsMCAyNzc1MC44LDAgMCwyMjQ2LjkgMCw0NDkzLjkgMCw2NzQwLjggLTc2MDYsMCAtMTUyMTIsMCAtMjI4MTguMSwwIDExMjIuOSwtMTI1Ny4yIDIyNDUuOCwtMjUxNC40IDMzNjguNiwtMzc3MS43IDY1NS4xLDQwMjUuOCAxMzEwLjEsODA1MS43IDE5NjUuMiwxMjA3Ny40eiIvPjxwYXRoIGNsYXNzPSJmaWwwIiBkPSJNMTQzOTIwLjcgMjEyMjAuNmMwLDg4MDAuNSAwLDE3NjAxLjEgMCwyNjQwMS43IC0xMjQzLjIsLTEyMzAuNSAtMjQ4Ni40LC0yNDYwLjkgLTM3MjkuNiwtMzY5MS40IDc0OTkuNCwwIDE0OTk4LjcsMCAyMjQ5OC4xLDAgMCwyNDYwLjkgMCw0OTIxLjkgMCw3MzgyLjggLTkwMjMuMywwIC0xODA0Ni42LDAgLTI3MDY5LjksMCAwLC0xMDAzMS4xIDAsLTIwMDYyLjEgMCwtMzAwOTMuMSAyNzY3LjEsMCA1NTM0LjIsMCA4MzAxLjQsMHoiLz48cGF0aCBjbGFzcz0iZmlsMCIgZD0iTTExMjIyNC4zIDI0ODcxLjljMjc4MC42LDAgNTU2MS4xLDAgODM0MS43LDAgMCw4ODE0IDAsMTc2MjcuOCAwLDI2NDQxLjggLTI3ODAuNiwwIC01NTYxLjEsMCAtODM0MS43LDAgMCwtODgxNCAwLC0xNzYyNy44IDAsLTI2NDQxLjh6bS0xMTQ2OS42IC0zNjUxLjNjMTA0MjcsMCAyMDg1My44LDAgMzEyODAuNywwIDAsMjQ2MC45IDAsNDkyMS45IDAsNzM4Mi44IC0xMDQyNi45LDAgLTIwODUzLjcsMCAtMzEyODAuNywwIDAsLTI0NjAuOSAwLC00OTIxLjkgMCwtNzM4Mi44eiIvPjxwYXRoIGNsYXNzPSJmaWwwIiBkPSJNNzk0MDUuNSAyNDg3MS45YzI3ODAuNSwwIDU1NjAuOSwwIDgzNDEuNCwwIDAsODgxNCAwLDE3NjI3LjggMCwyNjQ0MS44IC0yNzgwLjUsMCAtNTU2MC45LDAgLTgzNDEuNCwwIDAsLTg4MTQgMCwtMTc2MjcuOCAwLC0yNjQ0MS44em0tMTE0NjkuNiAtMzY1MS4zYzEwNDI2LjksMCAyMDg1My43LDAgMzEyODAuNywwIDAsMjQ2MC45IDAsNDkyMS45IDAsNzM4Mi44IC0xMDQyNywwIC0yMDg1My44LDAgLTMxMjgwLjcsMCAwLC0yNDYwLjkgMCwtNDkyMS45IDAsLTczODIuOHoiLz48cGF0aCBjbGFzcz0iZmlsMCIgZD0iTTQyMjcyLjYgNDU1MzUuOGMwLC0yMjMzLjUgMCwtNDQ2Ny4xIDAsLTY3MDAuNiA2OTExLDAgMTM4MjIuMiwwIDIwNzMzLjQsMCAwLDIyMzMuNSAwLDQ0NjcuMSAwLDY3MDAuNiAtNjkxMS4xLDAgLTEzODIyLjMsMCAtMjA3MzMuNCwwem0xNjAwMS4yIC0yNDMxNS4yYzQ1NTguMywxMDAzMSA5MTE2LjgsMjAwNjIgMTM2NzUuMiwzMDA5My4xIC0yOTU0LjMsMCAtNTkwOC41LDAgLTg4NjIuOCwwIC0zODIzLjIsLTg4NTQuMSAtNzY0Ni4zLC0xNzcwOC4xIC0xMTQ2OS41LC0yNjU2Mi4xIDgwMiwwIDE2MDQuMSwwIDI0MDYuMSwwIC0zODM2LjUsODg1NCAtNzY3My4xLDE3NzA4IC0xMTUwOS43LDI2NTYyLjEgLTI5NTQuMiwwIC01OTA4LjUsMCAtODg2Mi43LDAgNDU1OC40LC0xMDAzMS4xIDkxMTYuOCwtMjAwNjIuMSAxMzY3NS4yLC0zMDA5My4xIDM2NDkuNCwwIDcyOTguOCwwIDEwOTQ4LjIsMHoiLz48cGF0aCBjbGFzcz0iZmlsMCIgZD0iTTIyODc1LjMgMzY1ODguMWMyMjcuMiwtNTIxLjUgNDU0LjQsLTEwNDMuMiA2ODEuNiwtMTU2NC44IDIzMjYsNTMuNiA0MjM3LjgsNDE0LjYgNTczNC45LDEwODMuNSAxNTIzLjgsNjQyIDI2NjAuMiwxNTUxLjUgMzQwOC43LDI3MjguNCA3NDguNiwxMTUwLjMgMTEyMywyNDg3LjYgMTEyMyw0MDEyLjQgMCwxNjMxLjcgLTM3NC40LDMwODkuNiAtMTEyMyw0MzczLjYgLTc0OC42LDEyNTcuMSAtMTg3MS41LDIyNjAuMyAtMzM2OC43LDMwMDkuMiAtMTQ3MC40LDcyMi4zIC0zMzE1LjEsMTA4My40IC01NTM0LjMsMTA4My40IC03NDA1LjcsMCAtMTQ4MTEuNSwwIC0yMjIxNy4yLDAgNzc1LjQsLTUxNDkuMyAxNTUwLjcsLTEwMjk4LjYgMjMyNiwtMTU0NDcuOCAtNzc1LjQsLTQ4ODEuOCAtMTU1MC43LC05NzYzLjYgLTIzMjYsLTE0NjQ1LjMgNzEzOC40LDAgMTQyNzYuOSwwIDIxNDE1LjMsMCAyNzgwLjQsMCA0OTQ2LDY1NS4zIDY0OTYuOCwxOTY2LjEgMTU1MC41LDEyODMuOSAyMzI2LDMwNzYuMSAyMzI2LDUzNzYuNiAwLDEyNTcuMiAtMjk0LjEsMjQ2MC44IC04ODIuNCwzNjExLjEgLTU4OC4xLDExNTAuMyAtMTUzNy4yLDIxMjYuNyAtMjg0Ny4zLDI5MjkuMSAtMTI4My4zLDc3NS45IC0zMDIxLDEyNzAuNiAtNTIxMy4zLDE0ODQuNXptLTEzMDczLjggMTI3OTkuN2MtMTA2OS40LC0xMjk3LjMgLTIxMzguOCwtMjU5NC43IC0zMjA4LjMsLTM4OTIgNDk4Ni4xLDAgOTk3Mi40LDAgMTQ5NTguNiwwIDEyMDMuMiwwIDIxMzguNywtMjk0LjMgMjgwNy4zLC04ODIuNyA2NjguMywtNTg4LjYgMTAwMi40LC0xNDA0LjUgMTAwMi40LC0yNDQ3LjggMCwtMTA0My4yIC0zNjAuOCwtMTg3Mi4zIC0xMDgyLjcsLTI0ODcuNSAtNzIxLjksLTY0MiAtMTc5MS4yLC05NjMgLTMyMDguMiwtOTYzIC00MTE3LjQsMCAtODIzNC43LDAgLTEyMzUyLDAgMCwtMTg5OS4zIDAsLTM3OTguNSAwLC01Njk3LjggMzc0MywwIDc0ODYsMCAxMTIyOSwwIDk2Mi41LDAgMTc2NC42LC0yODAuOCAyNDA2LjIsLTg0Mi42IDY2OC40LC01ODguNCAxMDAyLjUsLTEzNzcuNiAxMDAyLjUsLTIzNjcuMyAwLC04MDIuNSAtMjgwLjcsLTE0NTcuOSAtODQyLjIsLTE5NjYgLTU2MS4zLC01MzUgLTEzNjMuNiwtODAyLjQgLTI0MDYuMiwtODAyLjQgLTQ0OTEuNSwwIC04OTgzLDAgLTEzNDc0LjYsMCAxMDU2LjEsLTEyOTcuNSAyMTEyLjEsLTI1OTQuOSAzMTY4LjIsLTM4OTIuMyA2ODEuNyw0MjM5LjggMTM2My42LDg0NzkuNiAyMDQ1LjMsMTI3MTkuNCAtNjgxLjcsNDUwNy4zIC0xMzYzLjYsOTAxNC42IC0yMDQ1LjMsMTM1MjEuOXoiLz48cGF0aCBjbGFzcz0iZmlsMCIgZD0iTTM0MTg5Ni40IDI0ODQ4LjljMjc4MC45LDAgNTU2MS44LDAgODM0Mi43LDAgMCw4ODE0IDAsMTc2MjcuOSAwLDI2NDQyIC0yNzgwLjksMCAtNTU2MS44LDAgLTgzNDIuNywwIDAsLTg4MTQuMSAwLC0xNzYyOCAwLC0yNjQ0MnptLTExNDY4LjIgLTM2NTEuM2MxMDQyNi40LDAgMjA4NTIuOCwwIDMxMjc5LjMsMCAwLDI0NjAuOSAwLDQ5MjIgMCw3MzgyLjkgLTEwNDI2LjUsMCAtMjA4NTIuOSwwIC0zMTI3OS4zLDAgMCwtMjQ2MC45IDAsLTQ5MjIgMCwtNzM4Mi45eiIvPjxwYXRoIGNsYXNzPSJmaWwwIiBkPSJNMzA0OTk4IDM0MzU4LjNjMzY0OS41LDAgNzI5OSwwIDEwOTQ4LjUsMCAxMzM2LjMsMCAyMzc5LjQsLTMwNy41IDMxMjcuNCwtOTIyLjcgNzQ4LjEsLTYxNS4zIDExMjMuOCwtMTQ3MS4yIDExMjMuOCwtMjU2OC4xIDAsLTExMjMuNCAtMzc1LjgsLTE5NzkuNSAtMTEyMy44LC0yNTY3LjkgLTc0OCwtNjE1LjMgLTE3OTEuMSwtOTIzIC0zMTI3LjQsLTkyMyAtNDAzNywwIC04MDc0LDAgLTEyMTExLDAgMTI0My4zLC0xMzI0IDI0ODYuNSwtMjY0OC4yIDM3MjkuNywtMzk3Mi4zIDAsOTI5NS41IDAsMTg1OTEgMCwyNzg4Ni41IC0yNzY3LjQsMCAtNTUzNC44LDAgLTgzMDIuMywwIDAsLTEwMDMxLjIgMCwtMjAwNjIuMiAwLC0zMDA5My4zIDU5NDguNywwIDExODk3LjMsMCAxNzg0Ni4xLDAgMjI5OC42LDAgNDMwMy45LDQxNC42IDYwMTUuOSwxMjQzLjggMTcxMC40LDgwMi42IDMwNDYuNiwxOTI1LjkgNDAxMC43LDMzNzAuNSA5NjIuMywxNDE3LjggMTQ0My41LDMxMDMgMTQ0My41LDUwNTUuNiAwLDE4OTkuMiAtNDgxLjIsMzU3MSAtMTQ0My41LDUwMTUuNSAtOTY0LDE0NDQuNSAtMjMwMC4zLDI1NjcuOSAtNDAxMC43LDMzNzAuNSAtMTcxMiw4MDIuNiAtMzcxNy40LDEyMDMuOCAtNjAxNS45LDEyMDMuOCAtNDAzNywwIC04MDc0LDAgLTEyMTExLDAgMCwtMjAzMy4xIDAsLTQwNjYgMCwtNjA5OS4xem00NDkxLjggMjg0OWMzMTE0LjUsMCA2MjI5LDAgOTM0My41LDAgMzU5NS43LDQ2OTQuNSA3MTkxLjQsOTM4OS4xIDEwNzg3LjEsMTQwODMuNiAtMzIwOC4zLDAgLTY0MTYuNCwwIC05NjI0LjYsMCAtMzUwMiwtNDY5NC42IC03MDA0LC05Mzg5LjEgLTEwNTA2LC0xNDA4My42eiIvPjxwYXRoIGNsYXNzPSJmaWwwIiBkPSJNMjY2NzM3IDQ1NTEzYzAsLTIyMzMuNiAwLC00NDY3LjIgMCwtNjcwMC44IDY5MTEuNSwwIDEzODIzLDAgMjA3MzQuNiwwIDAsMjIzMy42IDAsNDQ2Ny4yIDAsNjcwMC44IC02OTExLjYsMCAtMTM4MjMuMSwwIC0yMDczNC42LDB6bTE2MDAyLjIgLTI0MzE1LjRjNDU1OC41LDEwMDMxLjEgOTExNy4xLDIwMDYyLjEgMTM2NzUuNiwzMDA5My4zIC0yOTU0LjgsMCAtNTkwOS41LDAgLTg4NjQuMiwwIC0zODIyLjksLTg4NTQuMiAtNzY0NS41LC0xNzcwOC4yIC0xMTQ2OC4zLC0yNjU2Mi40IDgwMS44LDAgMTYwMy43LDAgMjQwNS43LDAgLTM4MzYuOCw4ODU0LjIgLTc2NzMuNiwxNzcwOC4yIC0xMTUxMC40LDI2NTYyLjQgLTI5NTQuMiwwIC01OTA4LjMsMCAtODg2Mi41LDAgNDU1OC41LC0xMDAzMS4yIDkxMTcuMSwtMjAwNjIuMiAxMzY3NS42LC0zMDA5My4zIDM2NDkuNSwwIDcyOTksMCAxMDk0OC41LDB6Ii8+PHBhdGggY2xhc3M9ImZpbDAiIGQ9Ik0yNDIzMDYgMjQ4NDguOWMyNzgwLjMsMCA1NTYwLjYsMCA4MzQwLjksMCAwLDg4MTQgMCwxNzYyNy45IDAsMjY0NDIgLTI3ODAuNCwwIC01NTYwLjYsMCAtODM0MC45LDAgMCwtODgxNC4xIDAsLTE3NjI4IDAsLTI2NDQyem0tMTE0NzAgLTM2NTEuM2MxMDQyNywwIDIwODU0LDAgMzEyODEsMCAwLDI0NjAuOSAwLDQ5MjIgMCw3MzgyLjkgLTEwNDI3LDAgLTIwODU0LDAgLTMxMjgxLDAgMCwtMjQ2MC45IDAsLTQ5MjIgMCwtNzM4Mi45eiIvPjxwYXRoIGNsYXNzPSJmaWwwIiBkPSJNMTk4Nzc3IDQxNDIwLjFjMjgyMC43LDAgNTY0MS4zLDAgODQ2Mi4xLDAgMTMzLjUsODI5LjIgNTIxLjUsMTU1MS41IDExNjIuNCwyMTY2LjcgNjQyLjcsNjE1LjMgMTQ5Ny45LDEwOTYuNyAyNTY3LjMsMTQ0NC42IDEwOTUuNywzMjEgMjM3OS4zLDQ4MS4zIDM4NDkuMSw0ODEuMyAyMDMxLjYsMCAzNjM2LjYsLTI1NCA0ODEzLjEsLTc2Mi4zIDExNzYuNCwtNTM1IDE3NjQuNywtMTMxMC43IDE3NjQuNywtMjMyNy4yIDAsLTc3NS43IC0zMzUuNCwtMTM3Ny42IC0xMDAyLjcsLTE4MDUuNiAtNjY4LjksLTQyOCAtMTk1Mi42LC03MzUuNiAtMzg1MC44LC05MjIuOSAtMTg3MS4yLC0xNzMuOCAtMzc0Mi42LC0zNDcuOCAtNTYxMy44LC01MjEuNiAtNDE0NC4xLC0zNzQuNCAtNzE1Mi4yLC0xMzEwLjcgLTkwMjQsLTI4MDguNyAtMTg3MC4xLC0xNTI0LjYgLTI4MDYuMSwtMzU3MSAtMjgwNi4xLC02MTM5IDAsLTIwODYuNCA2MDAuNiwtMzg1MiAxODAzLjQsLTUyOTYuMyAxMjMwLjksLTE0NDQuNSAyOTQxLjIsLTI1MjcuOSA1MTM0LjUsLTMyNTAuMSAyMjE3LjgsLTc0OC45IDQ3OTkuMSwtMTEyMy41IDc3MzguNiwtMTEyMy41IDI4ODguNSwwIDU0NTQuMSw0MTQuNiA3NzAwLDEyNDMuOSAyMjQ1LjksODAyLjMgNDAyNC43LDE5NTIuNiA1MzM0LjcsMzQ1MC42IDEzMzYuMiwxNDk4IDIwNTgsMzIzNi42IDIxNjUuMSw1MjE2IC0yODA3LjIsMCAtNTYxNC40LDAgLTg0MjEuNywwIC0xMDcuMSwtNzIyLjIgLTQ1NC44LC0xMzM3LjMgLTEwNDMuMSwtMTg0NS42IC01NjAuMSwtNTM1IC0xMzM2LjIsLTkzNi4yIC0yMzI0LjksLTEyMDMuOCAtOTkwLjQsLTI5NC4yIC0yMTc5LjEsLTQ0MS4zIC0zNTY5LjksLTQ0MS4zIC0xODcxLjksMCAtMzM1NS43LDI1NCAtNDQ1MS40LDc2Mi4zIC0xMDk1LjgsNDgxLjYgLTE2NDMuNiwxMjAzLjggLTE2NDMuNiwyMTY2LjggMCw2OTUuNiAzMTkuNSwxMjU3LjIgOTYyLjIsMTY4NS4yIDY2Ny4zLDQyOCAxODU3LjksNzIyLjMgMzU2OC4yLDg4Mi43IDE5OTEuOSwyMDAuNyAzOTgzLjcsNDAxLjIgNTk3NS42LDYwMS45IDI4NjAuNSwyNjcuNiA1MTQ2LjgsNzM1LjYgNjg1OC45LDE0MDQuMyAxNzEwLjMsNjQyLjEgMjk1My41LDE1MzguMiAzNzI5LjcsMjY4OC4zIDc3NC4zLDExNTAuMyAxMTYyLjQsMjU4MS40IDExNjIuNCw0MjkzLjMgMCwyMTEzLjMgLTYyOC42LDM5NTguOCAtMTg4NC4xLDU1MzcuMyAtMTI1Ny4zLDE1NTEuMyAtMzAyMi4xLDI3NjguNSAtNTI5NC4zLDM2NTEuMSAtMjI3Mi4yLDg1NiAtNDkyMC4zLDEyODMuOSAtNzk0MC41LDEyODMuOSAtMzEwMSwwIC01ODQyLjIsLTQyOCAtODIyMS41LC0xMjgzLjkgLTIzNTMuMSwtODgyLjYgLTQxOTYuOCwtMjExMy4yIC01NTM0LjksLTM2OTEuNCAtMTMzNi4zLC0xNjA0LjkgLTIwNDMuOSwtMzQ1MC42IC0yMTI0LjcsLTU1MzcuMnoiLz48cGF0aCBjbGFzcz0iZmlsMSIgZD0iTTE5OTkyMC4xIDU2NDM0YzQwNS42LDUwMC45IDg3MC45LDk2Ny45IDEzOTkuNSwxMzk4LjcgMS43LDEuNCAzLjUsMi45IDUuMyw0LjQgMS43LDEuNCAzLjUsMi44IDUuMyw0LjIgMTIyMC40LDk3Ni44IDI3ODUsMTcxMS41IDQ2NDQuNSwyMjM5LjcgLTI4MDguOSwwIC01NjE3LjksMCAtODQyNi45LDAgMjEuMSw1NDcuMyA0Mi4yLDEwOTQuNiA2My4yLDE2NDEuOSA5My4xLDI0MzUuNiA5MzAuNyw0NjE1LjcgMjQ5MCw2NDg4LjggMS44LDEuNiAzLjUsMy4yIDUuMyw0LjkgMS4xLDEuNyAyLjMsMy40IDMuNSw1LjIgMTU0NS4yLDE4MjMuOCAzNjM0LjgsMzE5Mi40IDYxODQuNSw0MTQ5LjYgMy41LDEuMyA3LDIuNiAxMC41LDMuOSAzLjUsMS4xIDcuMSwyLjMgMTAuNiwzLjUgMjU4NC44LDkyOS44IDU1MTIsMTM3Ny4yIDg3NTUuMiwxMzc3LjIgMzE2Ny44LDAgNjAwOSwtNDQ4LjIgODQ5Ny4yLC0xMzg1LjMgMywtMSA1LjksLTEuOSA4LjgsLTIuOSAyLjQsLTEgNC43LC0xLjkgNy4xLC0zIDI0NzIuNCwtOTYwLjUgNDQ4NC43LC0yMzIxLjcgNTk0OS4yLC00MTI5LjggMS4yLC0xLjcgMi40LC0zLjQgMy41LC01LjMgMS44LC0xLjcgMy41LC0zLjMgNS4zLC01LjEgMTQ5MC45LC0xODcyLjEgMjIyOC40LC00MDY5LjUgMjIyOC40LC02NTIyLjMgMCwtMTk1Mi44IC00NDQuMywtMzcxMC42IC0xNDMyLjksLTUxNzcuNCAtMjEuMSwtMzAuNSAtNDAuNCwtNjAuOSAtNjEuNSwtOTEgLTY5NC4yLDAgLTEzODguNCwwIC0yMDgyLjYsMCAzMjEuMywzMDEuNyA1OTguOCw2MjYuNyA4MzQuMSw5NzUuMSA3NzQuNCwxMTUwLjMgMTE2Mi41LDI1ODEuMiAxMTYyLjUsNDI5My4zIDAsMjExMy4yIC02MjguNiwzOTU4LjggLTE4ODQuMiw1NTM3IC0xMjU3LjMsMTU1MS41IC0zMDIyLDI3NjguNyAtNTI5NC4yLDM2NTEuNCAtMjI3Mi4zLDg1NiAtNDkxOC41LDEyODMuOSAtNzk0MC42LDEyODMuOSAtMzEwMSwwIC01ODQyLjEsLTQyOCAtODIyMS41LC0xMjgzLjkgLTIzNTEuMiwtODgyLjcgLTQxOTYuNywtMjExMy4zIC01NTMzLjEsLTM2OTEuNCAtOTg4LjcsLTExODYuOSAtMTYzNC45LC0yNTA1LjcgLTE5MzUuMSwtMzk1NiAtMTA3LjEsLTUxMC43IC0xNzAuMywtMTAzNy43IC0xOTEuNCwtMTU4MS4yIDI4MjAuOCwwIDU2NDEuNCwwIDg0NjIuMSwwIDEzMy41LDgyOS4zIDUyMS41LDE1NTEuNSAxMTYyLjUsMjE2Ni44IDY0Mi43LDYxNS4zIDE0OTcuOSwxMDk2LjYgMjU2Ny4yLDE0NDQuNSAxMDk1LjgsMzIxIDIzNzkuNCw0ODEuNCAzODUwLjksNDgxLjQgMjAzMS42LDAgMzYzNC44LC0yNTQgNDgxMS4zLC03NjIuMyAxMTc2LjUsLTUzNSAxNzY0LjgsLTEzMTAuNyAxNzY0LjgsLTIzMjcuMiAwLC03NzUuOSAtMzMzLjcsLTEzNzcuNiAtMTAwMi43LC0xODA1LjYgLTY2OSwtNDI4IC0xOTUwLjksLTczNS43IC0zODQ5LjEsLTkyMyAtMTg3MS44LC0xNzMuOCAtMzc0My43LC0zNDcuNyAtNTYxNS42LC01MjEuNSAtNDE0NC4xLC0zNzQuNiAtNzE1Mi4xLC0xMzEwLjkgLTkwMjIuMiwtMjgwOC44IC03MC4zLC01Ni43IC0xMzguNywtMTE0LjQgLTIwNS40LC0xNzIuNSAtNzMxLjEsMCAtMTQ2Mi4yLDAgLTIxOTMuMywwem00MTIxOC4xIDBjMCw1NTYwIDAsMTExMjAgMCwxNjY3OS45IDM4MzMuOCwwIDc2NjcuOCwwIDExNTAxLjcsMCAwLC01NTYwIDAsLTExMTIwIDAsLTE2Njc5LjkgLTUyNi45LDAgLTEwNTMuNywwIC0xNTgwLjUsMCAwLDUwMzIuOSAwLDEwMDY1LjggMCwxNTA5OC43IC0yNzgwLjMsMCAtNTU2MC42LDAgLTgzNDAuOSwwIDAsLTUwMzIuOSAwLC0xMDA2NS44IDAsLTE1MDk4LjcgLTUyNi44LDAgLTEwNTMuNiwwIC0xNTgwLjQsMHptMjI1MTUuMSAwYy0yNTI2LjIsNTU2MCAtNTA1Mi41LDExMTIwIC03NTc4LjgsMTY2NzkuOSA0MTE4LjQsMCA4MjM2LjgsMCAxMjM1NS4xLDAgODM0LjEsLTE5MjUuOSAxNjY4LjIsLTM4NTEuOSAyNTAyLjMsLTU3NzcuOCA0NDk5LjQsMCA4OTk4LjgsMCAxMzQ5OC4yLDAgODMxLjcsMTkyNS45IDE2NjMuNSwzODUxLjkgMjQ5NS4yLDU3NzcuOCA0MTE5LDAgODIzNy45LDAgMTIzNTYuOCwwIDAsLTAuMSAwLC0wLjEgMCwtMC4yIDM0MjUuMywwIDY4NTAuNywwIDEwMjc2LDAgMCwtMzYxMS4xIDAsLTcyMjIuMyAwLC0xMDgzMy41IDY1OS4xLDAgMTMxOC4yLDAgMTk3Ny4yLDAgMjY5NC4zLDM2MTEuMSA1Mzg4LjUsNzIyMi4zIDgwODIuOCwxMDgzMy41IDQ1MzkuOCwwIDkwNzkuNiwwIDEzNjE5LjQsMCAtMzA4NS4yLC00MDI3LjYgLTYxNzAuNSwtODA1NS4zIC05MjU1LjgsLTEyMDgzIDc3LjMsLTMzLjkgMTUyLjgsLTY4LjMgMjI4LjQsLTEwMy42IDE5NDcuMywtOTEzLjggMzUxNy4yLC0yMjE5LjIgNDY1My4zLC0zOTI1LjEgMTI0LjcsLTE4Ni40IDI0Mi4zLC0zNzUuOSAzNTIuOSwtNTY4IC02MjcuNSwwIC0xMjU0LjksMCAtMTg4Mi40LDAgLTk0Mi45LDEyOTYuNiAtMjIwOSwyMzE3IC0zNzk0LjcsMzA2MS4yIC0xODAuOCw4NC4zIC0zNjMuNCwxNjQuMyAtNTQ5LjYsMjM5LjYgLTUwNy41LDIwNS41IC0xMDM5LjUsMzc4LjIgLTE1OTQuNCw1MTguMSAyODc5LjgsMzc1OS45IDU3NTkuNiw3NTE5LjcgODYzOS40LDExMjc5LjYgLTMyMDguMiwwIC02NDE2LjMsMCAtOTYyNC41LDAgLTI2OTMuNywtMzYxMS4xIC01Mzg3LjQsLTcyMjIuMyAtODA4MS4xLC0xMDgzMy41IC0xNDUwLjQsMCAtMjkwMC45LDAgLTQzNTEuMywwIDAsMzYxMS4xIDAsNzIyMi4zIDAsMTA4MzMuNSAtMjc2Ni45LDAgLTU1MzMuNywwIC04MzAwLjUsMCAwLC01MDMyLjggMCwtMTAwNjUuNiAwLC0xNTA5OC41IC01MjYuOCwwIC0xMDUzLjYsMCAtMTU4MC40LDAgMCw0NjkwLjcgMCw5MzgxLjMgMCwxNDA3Mi4xIC0yMTMxLjgsLTQ2OTAuOCAtNDI2My41LC05MzgxLjQgLTYzOTUuMywtMTQwNzIuMSAtNTc4LjMsMCAtMTE1Ni42LDAgLTE3MzQuOSwwIDIyODYuOSw1MDMyLjkgNDU3My44LDEwMDY1LjggNjg2MC42LDE1MDk4LjcgLTI5NTQuMSwwIC01OTA4LjIsMCAtODg2Mi41LDAgLTgzMS43LC0xOTI1LjkgLTE2NjMuNSwtMzg1MS45IC0yNDk1LjIsLTU3NzcuOCAtNTE5MS4zLDAgLTEwMzgyLjUsMCAtMTU1NzMuOCwwIC04MzQuNywxOTI1LjkgLTE2NjkuMywzODUxLjkgLTI1MDQuMSw1Nzc3LjggLTI5NTQuMSwwIC01OTA4LjIsMCAtODg2Mi40LDAgMjI4Ni44LC01MDMyLjkgNDU3My43LC0xMDA2NS44IDY4NjAuNiwtMTUwOTguNyAtNTc4LjksMCAtMTE1Ny44LDAgLTE3MzYuNywwem0xMDI4MS4zIDBjLTM3OC43LDg3My40IC03NTcuNCwxNzQ2LjggLTExMzYuMSwyNjIwLjMgMzI1OS4xLDAgNjUxOC4zLDAgOTc3Ny4zLDAgLTM3Ni45LC04NzMuNCAtNzUzLjksLTE3NDYuOCAtMTEzMC44LC0yNjIwLjMgLTU3My43LDAgLTExNDcuMiwwIC0xNzIwLjksMCAxNDkuMiwzNDYuNCAyOTguNSw2OTIuNyA0NDcuOCwxMDM5LjEgLTE2NTUuNCwwIC0zMzEwLjcsMCAtNDk2NiwwIDE1MC41LC0zNDYuNCAzMDAuOSwtNjkyLjcgNDUxLjMsLTEwMzkuMSAtNTc0LjEsMCAtMTE0OC40LDAgLTE3MjIuNiwwem03ODI5Ny41IDBjLTUyNi45LDAgLTEwNTMuNywwIC0xNTgwLjUsMCAwLDUwMzIuOSAwLDEwMDY1LjggMCwxNTA5OC43IC0yNzgwLjMsMCAtNTU2MC42LDAgLTgzNDAuOSwwIDAsLTUwMzIuOSAwLC0xMDA2NS44IDAsLTE1MDk4LjcgLTUyNi44LDAgLTEwNTMuNiwwIC0xNTgwLjQsMCAwLDU1NjAgMCwxMTEyMCAwLDE2Njc5LjkgMzgzMy44LDAgNzY2Ny44LDAgMTE1MDEuNywwIDAsLTU1NjAgMCwtMTExMjAgMCwtMTY2NzkuOXptLTE0MDM4My43IDczMjguNGM5MTMuMSwyNjQuNSAyMDMzLjQsNDExLjMgMzM4My44LDQxMS4zIDE5MTcuNCwwIDMyNzQuOSwtMjQyLjkgNDE3MC40LC02MjYuNyA0MTYuMiwtMTkwLjkgNjE0LjYsLTM3Mi44IDcwNiwtNDkzLjIgNzUuNSwtMTAwIDExOS40LC0yMDkgMTE5LjQsLTM4OC40IDAsLTIyMS40IC00Ny40LC0zMjguMiAtMjc0LC00NzMuOSAtMTE5LjQsLTc2LjQgLTQxMi42LC0yMDkuNSAtOTc5LjgsLTM0NS43IC01NDcuOSwtMTMxLjMgLTEyNjQuNCwtMjQ1LjYgLTIxNjguNywtMzM0LjkgLTE4NjksLTE3My43IC0zNzM3LjksLTM0Ny4zIC01NjA2LjksLTUyMSAtMC42LDAgLTEuMSwwIC0xLjcsMCAtNzIzLjQsLTY1LjUgLTE0MjAuNSwtMTQ4LjEgLTIwOTMuMSwtMjQ4LjcgMzYuMywyMjMgNzIuNiw0NDYuMSAxMDguOCw2NjkuMSA3NS41LDQ2OS4xIDI4Ni4yLDg4NC44IDY5NS40LDEyNzcgNDI2LjcsNDA5LjQgMTA1MCw3ODMgMTk0MC40LDEwNzUuMXoiLz48cGF0aCBjbGFzcz0iZmlsMSIgZD0iTTIwMjE4LjcgMTM2MDMuNGM5NjIuNSwwIDE3NjQuNiwtMjgwLjkgMjQwNi4yLC04NDIuNiA2NjguMywtNTg4LjUgMTAwMi41LC0xMzc3LjYgMTAwMi41LC0yMzY3LjMgMCwtODAyLjUgLTI4MC42LC0xNDU3LjkgLTg0Mi4yLC0xOTY2LjEgLTU2MS4zLC01MzUgLTEzNjMuNSwtODAyLjUgLTI0MDYuMiwtODAyLjUgLTMyMjYuOSwwIC02NDUzLjcsMCAtOTY4MC42LDAgMzIwLjUsMTk5Mi45IDY0MC45LDM5ODUuNiA5NjEuMyw1OTc4LjUgMjg1Mi45LDAgNTcwNS45LDAgODU1OSwwem0zMDQ3LjkgLTExNzk2LjVjMjc4MC41LDAgNDk0Niw2NTUuNCA2NDk2LjgsMTk2Ni4xIDE1NTAuNSwxMjgzLjkgMjMyNiwzMDc2LjIgMjMyNiw1Mzc2LjYgMCwxMjU3LjMgLTI5NC4xLDI0NjEgLTg4Mi40LDM2MTEuMiAtNDE0LjcsODExLjEgLTEwMDksMTUzNS45IC0xNzgyLjgsMjE3NC4yIC0zMjMuNCwyNjYuOCAtNjc4LjMsNTE4LjQgLTEwNjQuNSw3NTQuOSAtMjE4LjEsMTMxLjkgLTQ0OS42LDI1NS45IC02OTQuMSwzNzEuNSAzOTAuNCw5My4zIDc2MS4zLDIwMC44IDExMTMuMywzMjIuOCAyLjQsMC44IDQuOCwxLjYgNy4yLDIuNCAyNzAuMyw5My44IDUyOS4zLDE5NS45IDc3Ni44LDMwNi42IDE2LjcsNyAzMy40LDE0IDUwLDIxIDE0LjgsNi42IDI5LjUsMTIuOSA0NC41LDE5LjIgNS40LDIuNSAxMC45LDQuOSAxNi41LDcuMyAxMDA1LjUsMCAyMDEwLjksMCAzMDE2LjQsMCAtNTAzLjgsLTQyMS42IC0xMDYzLjksLTc5MC44IC0xNjc1LjEsLTExMTAuNCA2NTIuNCwtNjM1LjYgMTE5MC41LC0xMzUwLjYgMTU5OC45LC0yMTQ5LjEgNjk4LjksLTEzNjYuOSAxMDU1LjcsLTI4MTYuNyAxMDU1LjcsLTQzMzEuNSAwLC0yNjkzLjUgLTkyOS4zLC00OTYwLjcgLTI4OTIuNSwtNjU4OS42IC0xOTI1LjMsLTE2MjQuMyAtNDQ5Ny42LC0yMzM0LjQgLTc1MTAuNiwtMjMzNC40IC00MDUyLjUsMCAtODEwNC44LDAgLTEyMTU3LjMsMCAtMTIsLTc1LjIgLTI0LjIsLTE1MC41IC0zNi4zLC0yMjUuNyAtNjEuMyw3NS4yIC0xMjIuNSwxNTAuNSAtMTgzLjgsMjI1LjcgLTM2MjkuNywwIC03MjU5LjUsMCAtMTA4ODkuMiwwIDg1OS40LDU0MTEuMSAxNzE4LjgsMTA4MjIgMjU3OC4yLDE2MjMzLjEgLTE0LjEsOTMuOSAtMjguNCwxODcuOSAtNDIuNSwyODEuOCA1MzIuOCwwIDEwNjUuNSwwIDE1OTguMiwwIDE0LjUsLTk2LjEgMjguOSwtMTkyLjMgNDMuNCwtMjg4LjMgLTc3NS4zLC00ODgxLjggLTE1NTAuNywtOTc2My42IC0yMzI2LC0xNDY0NS40IDcxMzguMywwIDE0Mjc2LjgsMCAyMTQxNS4yLDB6bTg3NjQ5IDE0OTMzLjdjMCwtMTk4OS45IDAsLTM5NzkuNyAwLC01OTY5LjUgLTMyODIuNywwIC02NTY1LjUsMCAtOTg0OC4zLDAgLTU0MC40LDAgLTEwODAuOCwwIC0xNjIxLjEsMCAtMzI4Mi45LDAgLTY1NjUuNywwIC05ODQ4LjYsMCAwLDE5ODkuOCAwLDM5NzkuNiAwLDU5NjkuNSAtNTI2LjgsMCAtMTA1My42LDAgLTE1ODAuNCwwIDAsLTI1MTcgMCwtNTAzMy45IDAsLTc1NTAuNyAzODA5LjYsMCA3NjE5LjMsMCAxMTQyOSwwIDAsLTI0NjAuOSAwLC00OTIxLjkgMCwtNzM4Mi44IC0xMDQxMy4zLDAgLTIwODI2LjYsMCAtMzEyMzkuOSwwIDAsMjQ2MC45IDAsNDkyMS45IDAsNzM4Mi44IDM4MjMuMiwwIDc2NDYuMywwIDExNDY5LjUsMCAwLDI1MTYuOSAwLDUwMzMuOCAwLDc1NTAuNyAtNTI2LjgsMCAtMTA1My42LDAgLTE1ODAuNCwwIDAsLTE5ODkuOSAwLC0zOTc5LjcgMCwtNTk2OS41IC0zODIzLjIsMCAtNzY0Ni4zLDAgLTExNDY5LjYsMCAwLC0zNTE1LjEgMCwtNzAzMC4yIDAsLTEwNTQ1LjIgMTA5NDAuMSwwIDIxODgwLjMsMCAzMjgyMC40LDAgNTQwLjMsMCAxMDgwLjcsMCAxNjIxLjEsMCAxMDk0MC4xLDAgMjE4ODAuMiwwIDMyODIwLjMsMCAwLDM1MTUuMSAwLDcwMzAuMiAwLDEwNTQ1LjIgLTM4MjMuMiwwIC03NjQ2LjQsMCAtMTE0NjkuNiwwIDAsMTk4OS44IDAsMzk3OS42IDAsNTk2OS41IC01MjYuOCwwIC0xMDUzLjYsMCAtMTU4MC40LDAgMCwtMjUxNyAwLC01MDMzLjkgMCwtNzU1MC43IDM4MjMuMiwwIDc2NDYuNCwwIDExNDY5LjYsMCAwLC0yNDYwLjkgMCwtNDkyMS45IDAsLTczODIuOCAtMTA0MTMuMywwIC0yMDgyNi42LDAgLTMxMjM5LjksMCAwLDI0NjAuOSAwLDQ5MjEuOSAwLDczODIuOCAzODA5LjYsMCA3NjE5LjIsMCAxMTQyOC44LDAgMCwyNTE2LjkgMCw1MDMzLjggMCw3NTUwLjcgLTUyNi44LDAgLTEwNTMuNiwwIC0xNTgwLjUsMHptODI4ODYuOCAwYzAsLTE0OTIuNSAwLC0yOTg1LjEgMCwtNDQ3Ny42IC01Njk1LjgsMCAtMTEzOTEuNywwIC0xNzA4Ny41LDAgLTExNS45LC03MTEuMyAtMjMxLjgsLTE0MjIuNiAtMzQ3LjcsLTIxMzQgNjE4Ni4zLDAgMTIzNzIuNywwIDE4NTU4LjksMCAwLC0zMzAxIDAsLTY2MDIuMiAwLC05OTAzLjIgLTEwMzkwLjQsMCAtMjA3ODAuOCwwIC0zMTE3MS4yLDAgODM2LjMsNTUwNC45IDE2NzIuNiwxMTAwOS44IDI1MDksMTY1MTQuOCA1MzIuOCwwIDEwNjUuNiwwIDE1OTguNCwwIC03NTYuMiwtNDk3Ny45IC0xNTEyLjUsLTk5NTUuNyAtMjI2OC43LC0xNDkzMy42IDkyNTAuNywwIDE4NTAxLjQsMCAyNzc1Mi4yLDAgMCwyMjQ2LjkgMCw0NDkzLjkgMCw2NzQwLjggLTYyNzksMCAtMTI1NTguMSwwIC0xODgzNy4xLDAgMjg3LjMsMTc2NS41IDU3NC40LDM1MzEgODYxLjcsNTI5Ni41IDU2MTcuMiwwIDExMjM0LjQsMCAxNjg1MS42LDAgMCw5NjUuNCAwLDE5MzAuOCAwLDI4OTYuMyA1MjYuOCwwIDEwNTMuNiwwIDE1ODAuNSwwem0tNDgwMzEgMGMwLC01NTA1IDAsLTExMDA5LjkgMCwtMTY1MTQuOCAtMzgyMC44LDAgLTc2NDEuNCwwIC0xMTQ2Mi4yLDAgMCw1NTA0LjkgMCwxMTAwOS44IDAsMTY1MTQuOCA1MjYuOCwwIDEwNTMuNywwIDE1ODAuNSwwIDAsLTQ5NzcuOSAwLC05OTU1LjcgMCwtMTQ5MzMuNiAyNzY3LjEsMCA1NTM0LjIsMCA4MzAxLjQsMCAwLDQ5NzcuOCAwLDk5NTUuNiAwLDE0OTMzLjYgNTI2LjgsMCAxMDUzLjYsMCAxNTgwLjQsMHptLTc4NzA0LjUgMGMtNTc4LjcsMCAtMTE1Ny40LDAgLTE3MzYuMiwwIC0yMjYyLjEsLTQ5NzcuOSAtNDUyNC4zLC05OTU1LjcgLTY3ODYuMywtMTQ5MzMuNiAtMzY0OS40LDAgLTcyOTguOCwwIC0xMDk0OC4yLDAgLTIyNjIuMSw0OTc3LjggLTQ1MjQuMiw5OTU1LjYgLTY3ODYuMiwxNDkzMy42IC01NzguNywwIC0xMTU3LjMsMCAtMTczNi4xLDAgMjUwMS42LC01NTA1IDUwMDMuMiwtMTEwMDkuOSA3NTA0LjcsLTE2NTE0LjggNDMyNy44LDAgODY1NS42LDAgMTI5ODMuNCwwIDI1MDEuNiw1NTA0LjkgNTAwMy4zLDExMDA5LjggNzUwNC45LDE2NTE0Ljh6bS0xMDI1NiAwYy0xMjQwLjksLTI4NzMuOCAtMjQ4MS44LC01NzQ3LjYgLTM3MjIuNywtODYyMS4zIC0xMjQ1LjIsMjg3My43IC0yNDkwLjQsNTc0Ny41IC0zNzM1LjYsODYyMS4zIDU3NC4xLDAgMTE0OC40LDAgMTcyMi42LDAgNjcwLjIsLTE1NDYuOCAxMzQwLjQsLTMwOTMuNSAyMDEwLjYsLTQ2NDAuMyA2NjcuOCwxNTQ2LjggMTMzNS43LDMwOTMuNSAyMDAzLjYsNDY0MC4zIDU3My45LDAgMTE0Ny43LDAgMTcyMS42LDB6bS00MzgwNC43IC00NzE4LjNjMjQwNC4xLDAgNDgwOC40LDAgNzIxMi41LDAgNjMxLjMsMCAxMDQ3LjgsLTE3My44IDEzNjMuNywtNDQ5LjggMjg2LjQsLTI1Mi43IDQ2NC42LC01ODguMiA0NjQuNiwtMTE3OC44IDAsLTM4NS43IC0xMTMuMywtNjA0LjYgLTMyMi4xLC03OTMuNiAtNSwtNC41IC05LjksLTkuMSAtMTQuOSwtMTMuNiAtNSwtNC43IC05LjgsLTkuMyAtMTQuOCwtMTMuOSAtMTc4LC0xNjkuNyAtNTM2LjIsLTM2Ni4zIC0xMzE2LjMsLTM2Ni4zIC0yNjA4LjUsMCAtNTIxNy4xLDAgLTc4MjUuNywwIDE1MC45LDkzOC43IDMwMiwxODc3LjQgNDUyLjksMjgxNi4xeiIvPjwvZz48L3N2Zz4=");
+}
+
+.bsh-logo {
+  display: block;
+  background-color: currentColor;
+  -webkit-mask: var(--bsh-logo) no-repeat center / contain;
+          mask: var(--bsh-logo) no-repeat center / contain;
 }
 
 /* ---------------------------------------------------------------------
@@ -150,9 +162,9 @@
   margin: 14px auto 0;
 }
 .bsh-nav__logo {
-  font-size: 19px; font-weight: 800; font-style: italic;
-  color: var(--bsh-pink); letter-spacing: -.02em; line-height: 1.05;
-  text-transform: uppercase; margin-right: 6px; white-space: nowrap;
+  flex: none; margin-right: 10px;
+  width: 112px; height: 23px;
+  color: var(--bsh-navy);          /* same colour as the body text */
 }
 .bsh-nav__links { display: flex; align-items: center; gap: 4px; }
 .bsh-nav__link {
@@ -242,9 +254,9 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
 .bsh-auth { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
 .bsh-auth__box { width: 100%; max-width: 440px; }
 .bsh-auth__logo { text-align: center; margin-bottom: 26px; }
-.bsh-auth__logo b {
-  font-size: 26px; font-weight: 800; font-style: italic; text-transform: uppercase;
-  color: var(--bsh-pink); letter-spacing: -.02em; display: block; line-height: 1.05;
+.bsh-auth__logo .bsh-logo {
+  width: 176px; height: 36px; margin: 0 auto 10px;
+  color: var(--bsh-navy);
 }
 .bsh-auth__logo span { font-size: 13px; color: var(--bsh-muted); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
 .bsh-auth__foot { text-align: center; margin-top: 22px; font-size: 13px; color: var(--bsh-muted); line-height: 1.6; }
@@ -344,13 +356,56 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
 @media (max-width: 960px) { .bsh-xp { grid-template-columns: minmax(0, 1fr); gap: 24px; } }
 
 /* ---------------------------------------------------------------------
+   SECTION RAIL. Collapsed it is a column of dots at the edge of the
+   viewport; hovering opens the labels over a white panel, so the reader
+   sees what is further down without scrolling to find out. Hidden on
+   narrow screens, where it would sit on top of the content.
+   --------------------------------------------------------------------- */
+.bsh-rail {
+  position: fixed; left: 18px; top: 50%; transform: translateY(-50%);
+  z-index: 800; display: none; flex-direction: column; gap: 2px;
+  padding: 10px 8px; border-radius: 20px;
+  transition: background .2s ease, box-shadow .2s ease, padding .2s ease;
+}
+@media (min-width: 1180px) { .bsh-rail { display: flex; } }
+.bsh-rail:hover { background: #fff; box-shadow: var(--bsh-shadow); padding-right: 18px; }
+
+.bsh-rail__item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 7px 6px; border: 0; background: none; cursor: pointer;
+  font-family: var(--bsh-font); font-size: 13px; font-weight: 700;
+  color: var(--bsh-muted); text-align: left; border-radius: var(--bsh-pill);
+  transition: color .18s ease;
+}
+.bsh-rail__item:hover { color: var(--bsh-navy); }
+.bsh-rail__item.is-active { color: var(--bsh-pink); }
+
+.bsh-rail__dot {
+  width: 9px; height: 9px; border-radius: 50%; flex: none;
+  background: var(--bsh-line); transition: background .18s ease, transform .18s ease;
+}
+.bsh-rail__item:hover .bsh-rail__dot { background: #C9D0E4; }
+.bsh-rail__item.is-active .bsh-rail__dot { background: var(--bsh-pink); transform: scale(1.45); }
+
+.bsh-rail__label {
+  /* min-width:auto on a flex item would beat max-width and keep the
+     label at full width, so the rail never collapsed. */
+  min-width: 0;
+  max-width: 0; overflow: hidden; white-space: nowrap; opacity: 0;
+  transition: max-width .22s ease, opacity .18s ease;
+}
+.bsh-rail:hover .bsh-rail__label { max-width: 200px; opacity: 1; }
+
+/* ---------------------------------------------------------------------
    THE JOURNEY. The arena's real history rather than a score, so the
    track reads as a road: behind you it is solid, ahead it is faint, and
    the next stop pulses.
    --------------------------------------------------------------------- */
 .bsh-path__track {
   display: flex; align-items: flex-start;
-  overflow-x: auto; padding-bottom: 8px; margin: 0 -6px;
+  /* overflow-x clips vertically too, so the pulsing ring needs headroom
+     inside the scroller rather than outside it. */
+  overflow-x: auto; padding: 14px 0 8px; margin: 0 -6px;
 }
 .bsh-path__track::-webkit-scrollbar { height: 6px; }
 .bsh-path__track::-webkit-scrollbar-thumb { background: var(--bsh-line); border-radius: 999px; }
@@ -358,7 +413,8 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
 .bsh-path__step { flex: 1 0 132px; position: relative; text-align: center; padding: 0 6px; }
 .bsh-path__step::before,
 .bsh-path__step::after {
-  content: ''; position: absolute; top: 20px; height: 3px; background: var(--bsh-line);
+  /* level with the middle of a 42px dot that starts 14px down */
+  content: ''; position: absolute; top: 34px; height: 3px; background: var(--bsh-line);
 }
 .bsh-path__step::before { left: 0; right: 50%; }
 .bsh-path__step::after  { left: 50%; right: 0; }
@@ -825,7 +881,8 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
     if (isAdmin()) links.push({ hash: '#/admin', label: 'Clients', key: 'admin' });
 
     return '<div class="bsh-wrap"><nav class="bsh-nav">' +
-      '<a class="bsh-nav__logo" href="#/hub">Battle<br>Start</a>' +
+      '<a class="bsh-nav__logo bsh-logo" href="#/hub" aria-label="' +
+        esc(CONFIG.brand) + '"></a>' +
       '<div class="bsh-nav__links">' +
         links.map(function (l) {
           return '<a class="bsh-nav__link' + (l.key === active ? ' is-active' : '') +
@@ -867,7 +924,9 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
   function screenLogin() {
     paint(
       '<div class="bsh-auth"><div class="bsh-auth__box">' +
-        '<div class="bsh-auth__logo"><b>' + esc(CONFIG.brand) + '</b><span>Client hub</span></div>' +
+        '<div class="bsh-auth__logo">' +
+          '<div class="bsh-logo" role="img" aria-label="' + esc(CONFIG.brand) + '"></div>' +
+          '<span>Client hub</span></div>' +
         '<div class="bsh-card">' +
           '<h1 class="bsh-h2 bsh-center" style="margin-bottom:6px">' +
             '<span class="bsh-accent">Sign in</span> to the hub</h1>' +
@@ -1077,6 +1136,57 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
     return row ? row.min_exp : 0;
   }
 
+  /* A column of dots down the left edge naming the sections of the page,
+     so a reader knows what is below before scrolling. Labels open on
+     hover; the active section follows the scroll. */
+  function railMarkup(items) {
+    return '<nav class="bsh-rail" id="bsh-rail">' +
+      items.map(function (it, i) {
+        return '<button class="bsh-rail__item' + (i === 0 ? ' is-active' : '') +
+               '" type="button" data-target="' + esc(it.id) + '">' +
+                 '<span class="bsh-rail__dot"></span>' +
+                 '<span class="bsh-rail__label">' + esc(it.label) + '</span>' +
+               '</button>';
+      }).join('') +
+    '</nav>';
+  }
+
+  function wireRail() {
+    var rail = document.getElementById('bsh-rail');
+    if (!rail) return;
+    rail.querySelectorAll('.bsh-rail__item').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var el = document.getElementById(btn.getAttribute('data-target'));
+        if (!el) return;
+        /* clear the sticky header rather than hiding under it */
+        window.scrollTo({
+          top: el.getBoundingClientRect().top + window.pageYOffset - 96,
+          behavior: 'smooth'
+        });
+      });
+    });
+    syncRail();
+  }
+
+  /* Highlights the section the reader is currently in. */
+  function syncRail() {
+    var rail = document.getElementById('bsh-rail');
+    if (!rail) return;
+    var items = Array.prototype.slice.call(rail.querySelectorAll('.bsh-rail__item'));
+    var active = 0;
+    items.forEach(function (btn, i) {
+      var el = document.getElementById(btn.getAttribute('data-target'));
+      if (el && el.getBoundingClientRect().top <= 150) active = i;
+    });
+
+    /* The last section often cannot reach the top of the window, so at the
+       bottom of the page it is the one being read whatever the maths says. */
+    var atBottom = window.innerHeight + window.pageYOffset >=
+                   document.documentElement.scrollHeight - 40;
+    if (atBottom) active = items.length - 1;
+    items.forEach(function (btn, i) { btn.classList.toggle('is-active', i === active); });
+  }
+
   /* The journey: milestones behind, the next one ahead. Reached dates are
      supplied by an administrator — Battle Start confirming each step is
      what gives the path its weight. */
@@ -1105,7 +1215,7 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
     var next = nextIdx >= 0 ? types[nextIdx] : null;
     var done = Object.keys(byslug).length;
 
-    return '<section class="bsh-section">' +
+    return '<section class="bsh-section" id="bsh-s-journey">' +
       '<h2 class="bsh-h2"><span class="bsh-accent">Your</span> journey</h2>' +
       '<p class="bsh-lead" style="margin-bottom:20px">' +
         (done
@@ -1130,7 +1240,7 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
     var tasks = pendingTasks().slice(0, 5);
     var perk  = L.next && L.next.perk;
 
-    return '<section class="bsh-section"><div class="bsh-card"><div class="bsh-xp">' +
+    return '<section class="bsh-section" id="bsh-s-progress"><div class="bsh-card"><div class="bsh-xp">' +
       '<div class="bsh-xp__side">' +
         '<div class="bsh-xp__now">' +
           '<span class="bsh-lvl">LVL ' + L.level + '</span>' +
@@ -1180,7 +1290,16 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
 
     var n = (S.arts || []).length;
 
-    paint(header('hub') +
+    /* The journey only appears once the network has a path defined, so
+       the rail is built from what is actually on the page. */
+    var journeyHtml = journeyCard(S.msMine);
+    var rail = [{ id: 'bsh-s-progress', label: 'Your progress' }];
+    if (journeyHtml) rail.push({ id: 'bsh-s-journey', label: 'Your journey' });
+    rail.push({ id: 'bsh-s-links',  label: 'Sections' });
+    rail.push({ id: 'bsh-s-latest', label: 'Latest material' });
+
+    paint(railMarkup(rail) +
+      header('hub') +
       '<div class="bsh-wrap">' +
         '<section class="bsh-hero">' +
           '<h1 class="bsh-h1"><span class="bsh-accent">Hello</span>' +
@@ -1192,9 +1311,9 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
 
         xpCard() +
 
-        journeyCard(S.msMine) +
+        journeyHtml +
 
-        '<section class="bsh-section"><div class="bsh-cards">' +
+        '<section class="bsh-section" id="bsh-s-links"><div class="bsh-cards">' +
           '<a class="bsh-shortcut" href="#/kb">' +
             '<div class="bsh-shortcut__icon">📚</div>' +
             '<div class="bsh-shortcut__title">Knowledge base</div>' +
@@ -1216,7 +1335,7 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
           '</div>' +
         '</div></section>' +
 
-        '<section class="bsh-section bsh-recent">' +
+        '<section class="bsh-section bsh-recent" id="bsh-s-latest">' +
           '<h2 class="bsh-h2"><span class="bsh-accent">Latest</span> material</h2>' +
           '<div class="bsh-card bsh-card--flat" style="margin-top:18px">' +
             (recent.length
@@ -1240,6 +1359,7 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
       '</div>');
 
     bindLogout();
+    wireRail();
   }
 
   /* ===================================================================
@@ -2205,6 +2325,8 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
       sb.auth.getSession().then(function (r) {
         S.session = r.data.session;
         window.addEventListener('hashchange', route);
+        window.addEventListener('scroll', syncRail, { passive: true });
+        window.addEventListener('resize', syncRail);
         if (S.session && S.recovery) return go('#/reset');
         route();
       }).catch(function (err) {

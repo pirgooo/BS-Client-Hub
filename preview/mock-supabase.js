@@ -285,6 +285,7 @@
       { slug: 'installation', title: 'Hardware installed',      description: 'The arena was built and wired',             icon: '🔧', sort_order: 30 },
       { slug: 'handover',     title: 'Handover passed',         description: 'Tracking calibrated, every set under load', icon: '✅', sort_order: 40 },
       { slug: 'opening',      title: 'Opened to guests',        description: 'The first session ran',                     icon: '🎉', sort_order: 50 },
+      { slug: 'first_party',  title: 'First birthday party',    description: 'A birthday group celebrated at your arena', icon: '🎂', sort_order: 55 },
       { slug: 'guests_1000',  title: 'First 1,000 guests',      description: 'A thousand people played at your arena',    icon: '👥', sort_order: 60 },
       { slug: 'year_one',     title: 'One year in the network', description: 'Twelve months of operation',                icon: '🏆', sort_order: 70 }
     ],

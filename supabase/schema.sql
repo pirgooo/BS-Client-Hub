@@ -390,6 +390,7 @@ insert into public.milestone_types (slug, title, description, icon, sort_order) 
   ('installation', 'Hardware installed',  'The arena was built and wired',                 '🔧', 30),
   ('handover',     'Handover passed',     'Tracking calibrated, every set under load',     '✅', 40),
   ('opening',      'Opened to guests',    'The first session ran',                         '🎉', 50),
+  ('first_party',  'First birthday party','A birthday group celebrated at your arena',     '🎂', 55),
   ('guests_1000',  'First 1,000 guests',  'A thousand people played at your arena',        '👥', 60),
   ('year_one',     'One year in the network', 'Twelve months of operation',                '🏆', 70)
 on conflict (slug) do update

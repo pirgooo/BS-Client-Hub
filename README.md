@@ -220,7 +220,9 @@ in and the step goes solid, clear it and the step goes back to pending. Dates
 are typed by hand and accept `2026-03-01` or `01.03.2026`.
 
 The path itself lives in `public.milestone_types` — edit that table to rename,
-reorder or add stops for the whole network. A client's own history is in
+reorder or add stops for the whole network. It ships with eight: agreement,
+venue, installation, handover, opening, **first birthday party**, first 1,000
+guests, and one year in the network. A client's own history is in
 `public.client_milestones`, one row per milestone reached.
 
 It also gives the network a plain operational view: who has been stuck on
@@ -323,6 +325,16 @@ Raw HTML is escaped rather than rendered, so an article cannot inject markup.
 
 ---
 
+## Finding your way around a page
+
+The home screen carries a column of dots at the left edge of the window naming
+its sections. Hovering opens the labels, clicking scrolls, and the current
+section stays highlighted as the reader moves — so what is further down the page
+is visible without scrolling to find out. It hides below 1180px, where it would
+sit on top of the content.
+
+---
+
 ## Running it locally
 
 Both local entry points load the same `tilda/battle-start-hub.html`, so what you
@@ -403,6 +415,17 @@ Defined at the top of the block's `<style>`; change them there and every screen 
 
 CSS classes are prefixed `bsh-` and everything is scoped to `.bsh`, so nothing
 collides with Tilda's own styles.
+
+### The wordmark
+
+The supplied SVG is white, which would disappear against the white header. It is
+therefore used as a **CSS mask** rather than an image: the shape comes from the
+file, the colour from `currentColor`. Both places that draw it — the header and
+the sign-in screen — set that colour to `--bsh-navy`, the body text colour, so
+recolouring the logo anywhere is a one-line change.
+
+The file is embedded as a data URI in the `--bsh-logo` variable, so the block
+stays self-contained and the logo cannot break from a dead link.
 
 ---
 
