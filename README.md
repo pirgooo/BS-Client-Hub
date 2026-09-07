@@ -113,8 +113,26 @@ half-configured page fails loudly rather than silently showing an empty hub.
 
 ### Page background
 
-The block paints its own background. If Tilda's own page background shows through
-at the edges, set it to `#F6F7FB` in page settings.
+The block covers only its own column, so the builder's white would otherwise
+show as a band down each side. It therefore paints the page itself, taking the
+colour from its own palette so the two can never drift apart. Set
+`paintPage: false` in CONFIG to leave the page colour alone.
+
+### Block height
+
+A **Zero Block artboard has a fixed height**, decided before this app exists,
+while the hub's height changes with the screen it is showing — five articles or
+twenty. Left alone, a Zero Block crops the hub mid-page and drops the site
+footer on top of it.
+
+The block handles this itself: after every render it measures its real height
+and pushes it onto the Tilda wrappers above it, clearing any overflow that would
+crop it. Only Tilda's own containers and elements with an inline height are
+touched.
+
+A plain **T123 "HTML code"** block needs none of that, since it already grows
+with its content. Prefer it unless the page is being designed around a Zero
+Block canvas.
 
 ---
 

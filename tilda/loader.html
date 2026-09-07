@@ -1,0 +1,77 @@
+<!-- =====================================================================
+     BATTLE START HUB — LOADER (plan B)
+
+     Use this instead of pasting the whole block when Tilda refuses the
+     124 KB of battle-start-hub.html, or when you would rather update the
+     hub by committing a file than by editing a page.
+
+     How it works: the hub itself lives in the GitHub repository and is
+     served by jsDelivr; this snippet fetches it and runs it. Everything
+     else — Supabase settings included — stays inside that one file.
+
+     SET UP
+       1. Put battle-start-hub.html in the repository (it is already at
+          hub/tilda/battle-start-hub.html) and push it.
+       2. Fill in SOURCE below.
+       3. Paste this snippet into the Tilda page instead of the hub.
+
+     A NOTE ON CACHING: jsDelivr caches @main hard, so a change can take
+     up to a day to appear. To publish immediately, pin the commit hash
+     instead of the branch — the URL below shows both forms.
+     ===================================================================== -->
+
+<div id="bsh-mount"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var SOURCE =
+    // by branch — convenient, cached for up to 24 hours
+    'https://cdn.jsdelivr.net/gh/pirgooo/pirgooo@main/hub/tilda/battle-start-hub.html';
+    // by commit — updates immediately, change the hash on every release
+    // 'https://cdn.jsdelivr.net/gh/pirgooo/pirgooo@a1b2c3d/hub/tilda/battle-start-hub.html';
+
+  var mount = document.getElementById('bsh-mount');
+
+  function fail(text) {
+    mount.innerHTML =
+      '<div style="max-width:520px;margin:60px auto;padding:22px 24px;border-radius:16px;' +
+      'background:#FDE7EE;color:#D01050;font:600 15px/1.6 -apple-system,Segoe UI,Roboto,sans-serif;' +
+      'text-align:center">' + text + '</div>';
+  }
+
+  fetch(SOURCE, { cache: 'no-store' })
+    .then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.text();
+    })
+    .then(function (html) {
+      var doc = new DOMParser().parseFromString('<body>' + html + '</body>', 'text/html');
+
+      /* Styles belong in the head; inline scripts have to be recreated,
+         because markup inserted as HTML never executes its scripts. */
+      var scripts = [];
+      Array.prototype.slice.call(doc.querySelectorAll('script')).forEach(function (s) {
+        if (!s.src) scripts.push(s.textContent);
+        s.parentNode.removeChild(s);
+      });
+      Array.prototype.slice.call(doc.querySelectorAll('style')).forEach(function (st) {
+        document.head.appendChild(st.cloneNode(true));
+        st.parentNode.removeChild(st);
+      });
+
+      while (doc.body.firstChild) { mount.appendChild(doc.body.firstChild); }
+
+      scripts.forEach(function (code) {
+        var el = document.createElement('script');
+        el.textContent = code;
+        document.body.appendChild(el);
+      });
+    })
+    .catch(function (err) {
+      fail('The hub could not be loaded (' + err.message + ').<br>' +
+           'Check that the file is published in the repository and that the address in SOURCE is right.');
+    });
+})();
+</script>

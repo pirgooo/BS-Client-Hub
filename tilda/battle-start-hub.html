@@ -606,7 +606,12 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
   var CONFIG = {
     url:     'https://sbyhcqjthddqbgpwmoxi.supabase.co',
     anonKey: 'sb_publishable_ci3Df8P-Eqx45sH_CdR3xg_ZpHFTBAf',
-    brand:   'Battle Start'
+    brand:   'Battle Start',
+
+    /* The hub paints the whole page its own background, so the builder's
+       white does not show around the block. Set to false to leave the
+       page colour alone. */
+    paintPage: true
   };
 
   var LIB_URL = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';
@@ -879,7 +884,61 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
   /* ===================================================================
      RENDERING
      =================================================================== */
-  function paint(html) { app.innerHTML = html; }
+  function paint(html) {
+    app.innerHTML = html;
+    fitHost();
+  }
+
+  /* -------------------------------------------------------------------
+     A page builder gives its blocks a height of their own — a Zero Block
+     artboard is a fixed number of pixels, decided before this app exists.
+     The hub's height changes with the screen it is showing, so after every
+     render it pushes its real height onto the containers above it and
+     clears any overflow that would crop it.
+
+     Only the builder's own wrappers and elements with an inline height are
+     touched, so nothing else on the page is disturbed. Outside a builder
+     there is nothing up there to correct and this does nothing.
+     ------------------------------------------------------------------- */
+  var HOST_CLASS = /(^|\s)(t396__artboard|t396__elem|t396|tn-atom|t-rec|t-container|t123)(\s|$)/;
+
+  function fitHost() {
+    /* wait for layout, then again once fonts and images have settled */
+    requestAnimationFrame(function () { applyFit(); paintPage(); });
+    setTimeout(function () { applyFit(); paintPage(); }, 450);
+  }
+
+  /* The block only covers its own column; the page around it stays the
+     builder's white, which reads as a band down each side. Taking the
+     colour from the app itself keeps it tied to the palette. */
+  function paintPage() {
+    if (CONFIG.paintPage === false || !app) return;
+    var bg = window.getComputedStyle(app).backgroundColor;
+    if (!bg || bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent') return;
+    document.documentElement.style.background = bg;
+    document.body.style.background = bg;
+  }
+
+  function applyFit() {
+    if (!app) return;
+    var height = app.scrollHeight;
+    if (!height) return;
+
+    var el = app.parentNode, hops = 0;
+    while (el && el.nodeType === 1 && el !== document.body && hops++ < 12) {
+      var cls    = el.className || '';
+      var inline = el.style && el.style.height;
+      if (HOST_CLASS.test(typeof cls === 'string' ? cls : '') || inline) {
+        var css = window.getComputedStyle(el);
+        if (css.overflow === 'hidden' || css.overflowY === 'hidden') el.style.overflow = 'visible';
+        if (el.offsetHeight < height) {
+          el.style.height    = height + 'px';
+          el.style.minHeight = height + 'px';
+        }
+      }
+      el = el.parentNode;
+    }
+  }
 
   function booting() {
     paint('<div class="bsh-boot"><div class="bsh-boot__dot"></div></div>');
@@ -2362,6 +2421,8 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
         window.addEventListener('hashchange', route);
         window.addEventListener('scroll', syncRail, { passive: true });
         window.addEventListener('resize', syncRail);
+        window.addEventListener('resize', fitHost);
+        window.addEventListener('load', fitHost);
         if (S.session && S.recovery) return go('#/reset');
         route();
       }).catch(function (err) {
