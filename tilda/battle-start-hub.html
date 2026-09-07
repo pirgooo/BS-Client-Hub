@@ -1,0 +1,1269 @@
+<!-- =====================================================================
+     BATTLE START — CLIENT HUB
+     The whole hub in one file: styles, Supabase auth, router and every
+     screen (sign in, password reset, home, knowledge base, article,
+     profile).
+
+     HOW TO INSTALL
+       1. Tilda -> create one page, e.g. /hub
+       2. Add a Zero Block -> "HTML" element (a T123 block works too)
+       3. Paste this entire file
+       4. Fill in CONFIG at the top of the <script> below
+     Nothing goes into the site HEAD. This is the only block you need.
+     ===================================================================== -->
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+/* ---------------------------------------------------------------------
+   DESIGN TOKENS (taken from the avatararena.ru reference)
+   Change them here and every screen follows.
+   --------------------------------------------------------------------- */
+.bsh {
+  --bsh-pink:        #EC1E5E;
+  --bsh-pink-dark:   #D01050;
+  --bsh-pink-soft:   #FDE7EE;
+  --bsh-blue:        #2F6BFF;
+  --bsh-blue-dark:   #1E55E0;
+  --bsh-blue-soft:   #E8EFFF;
+
+  --bsh-navy:        #1F2A5A;   /* body text   */
+  --bsh-navy-2:      #2D3C6E;   /* paragraphs  */
+  --bsh-muted:       #8A93A6;   /* captions    */
+
+  --bsh-bg:          #F6F7FB;   /* page ground */
+  --bsh-surface:     #FFFFFF;   /* cards       */
+  --bsh-soft:        #F1F3FA;   /* small tiles */
+  --bsh-line:        #E6E9F2;   /* borders     */
+
+  --bsh-radius-lg:   24px;
+  --bsh-radius-md:   16px;
+  --bsh-radius-sm:   12px;
+  --bsh-pill:        999px;
+
+  --bsh-shadow:      0 10px 40px rgba(31, 42, 90, .08);
+  --bsh-shadow-soft: 0 4px 18px rgba(31, 42, 90, .06);
+  --bsh-shadow-nav:  0 8px 30px rgba(31, 42, 90, .12);
+
+  --bsh-font: 'Manrope', 'Golos Text', -apple-system, BlinkMacSystemFont,
+              'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* ---------------------------------------------------------------------
+   BASE. Everything is scoped to .bsh so it never clashes with Tilda.
+   --------------------------------------------------------------------- */
+.bsh, .bsh * { box-sizing: border-box; }
+.bsh {
+  font-family: var(--bsh-font);
+  color: var(--bsh-navy);
+  font-size: 16px;
+  line-height: 1.55;
+  background: var(--bsh-bg);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+.bsh img { max-width: 100%; display: block; }
+
+/* Links inherit colour by default: otherwise blue overrides card
+   headings, the logo and the nav items. Blue is applied deliberately. */
+.bsh a { color: inherit; text-decoration: none; cursor: pointer; }
+.bsh-link, .bsh-prose a { color: var(--bsh-blue); }
+.bsh-link:hover, .bsh-prose a:hover { color: var(--bsh-blue-dark); }
+
+.bsh-wrap { width: 100%; max-width: 1160px; margin: 0 auto; padding: 0 20px; }
+
+/* ---------------------------------------------------------------------
+   TYPOGRAPHY. The reference's signature move is the two-tone heading:
+   <h2 class="bsh-h2"><span class="bsh-accent">Knowledge</span> base</h2>
+   --------------------------------------------------------------------- */
+.bsh-h1 { font-size: clamp(30px, 4.4vw, 46px); font-weight: 800; letter-spacing: -.02em; line-height: 1.12; margin: 0 0 14px; }
+.bsh-h2 { font-size: clamp(26px, 3.4vw, 38px); font-weight: 800; letter-spacing: -.02em; line-height: 1.16; margin: 0 0 12px; }
+.bsh-h3 { font-size: 20px; font-weight: 700; letter-spacing: -.01em; margin: 0 0 8px; }
+.bsh-accent { color: var(--bsh-pink); }
+.bsh-lead   { font-size: 17px; color: var(--bsh-navy-2); margin: 0 0 8px; }
+.bsh-muted  { color: var(--bsh-muted); }
+.bsh-label  { font-size: 13px; font-weight: 500; color: var(--bsh-muted); }
+.bsh-center { text-align: center; }
+
+.bsh-section { padding: 32px 0; }
+
+/* ---------------------------------------------------------------------
+   PILLS AND BADGES
+   --------------------------------------------------------------------- */
+.bsh-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 7px 14px; border-radius: var(--bsh-pill);
+  background: var(--bsh-soft); color: var(--bsh-navy-2);
+  font-size: 13px; font-weight: 600; white-space: nowrap;
+}
+.bsh-badge--pink { background: var(--bsh-pink); color: #fff; }
+.bsh-badge--blue { background: var(--bsh-blue-soft); color: var(--bsh-blue-dark); }
+
+/* ---------------------------------------------------------------------
+   BUTTONS
+   --------------------------------------------------------------------- */
+.bsh-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 14px 26px; border-radius: var(--bsh-pill);
+  border: 1px solid transparent; cursor: pointer;
+  font-family: var(--bsh-font); font-size: 15px; font-weight: 700;
+  line-height: 1; white-space: nowrap;
+  transition: background .18s ease, color .18s ease, border-color .18s ease, transform .12s ease;
+}
+.bsh-btn:active { transform: translateY(1px); }
+.bsh-btn[disabled], .bsh-btn.is-busy { opacity: .6; pointer-events: none; }
+.bsh-btn--primary { background: var(--bsh-blue); color: #fff; box-shadow: 0 6px 18px rgba(47, 107, 255, .28); }
+.bsh-btn--primary:hover { background: var(--bsh-blue-dark); color: #fff; }
+.bsh-btn--accent { background: var(--bsh-pink); color: #fff; box-shadow: 0 6px 18px rgba(236, 30, 94, .26); }
+.bsh-btn--accent:hover { background: var(--bsh-pink-dark); color: #fff; }
+.bsh-btn--ghost { background: #fff; color: var(--bsh-navy); border-color: var(--bsh-line); }
+.bsh-btn--ghost:hover { border-color: #C9D0E4; color: var(--bsh-navy); }
+.bsh-btn--wide { width: 100%; }
+.bsh-btn--sm   { padding: 10px 18px; font-size: 14px; }
+
+/* ---------------------------------------------------------------------
+   CARDS AND TILES
+   --------------------------------------------------------------------- */
+.bsh-card {
+  background: var(--bsh-surface);
+  border-radius: var(--bsh-radius-lg);
+  box-shadow: var(--bsh-shadow);
+  padding: 32px;
+}
+.bsh-card--flat { box-shadow: var(--bsh-shadow-soft); }
+.bsh-card--pad-sm { padding: 22px; }
+
+.bsh-tile { background: var(--bsh-soft); border-radius: var(--bsh-radius-sm); padding: 16px 18px; }
+.bsh-tile__label { font-size: 13px; color: var(--bsh-muted); margin-bottom: 6px; }
+.bsh-tile__value { font-size: 20px; font-weight: 800; letter-spacing: -.01em; }
+.bsh-tile__value--pink { color: var(--bsh-pink); }
+
+/* ---------------------------------------------------------------------
+   PILL HEADER (as on the reference: a white capsule over the content)
+   --------------------------------------------------------------------- */
+.bsh-nav {
+  position: sticky; top: 14px; z-index: 900;
+  display: flex; align-items: center; gap: 10px;
+  background: #fff; border-radius: var(--bsh-pill);
+  box-shadow: var(--bsh-shadow-nav);
+  padding: 10px 12px 10px 22px;
+  margin: 14px auto 0;
+}
+.bsh-nav__logo {
+  font-size: 19px; font-weight: 800; font-style: italic;
+  color: var(--bsh-pink); letter-spacing: -.02em; line-height: 1.05;
+  text-transform: uppercase; margin-right: 6px; white-space: nowrap;
+}
+.bsh-nav__links { display: flex; align-items: center; gap: 4px; }
+.bsh-nav__link {
+  padding: 9px 14px; border-radius: var(--bsh-pill);
+  font-size: 15px; font-weight: 600; white-space: nowrap;
+}
+.bsh-nav__link:hover { background: var(--bsh-soft); }
+.bsh-nav__link.is-active { background: var(--bsh-soft); color: var(--bsh-pink); }
+.bsh-nav__side { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+.bsh-nav__user { display: flex; align-items: center; gap: 10px; padding-right: 4px; }
+.bsh-nav__avatar {
+  width: 36px; height: 36px; border-radius: 50%; flex: none;
+  background: var(--bsh-pink); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800;
+}
+.bsh-nav__name { font-size: 14px; font-weight: 700; line-height: 1.2; }
+.bsh-nav__company { font-size: 12px; color: var(--bsh-muted); line-height: 1.2; }
+
+/* ---------------------------------------------------------------------
+   TABS (category switcher, like the reference's 10 m2 / 400 m2 row)
+   --------------------------------------------------------------------- */
+.bsh-tabs { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 26px; }
+.bsh-tab {
+  padding: 11px 20px; border-radius: var(--bsh-radius-sm);
+  background: #fff; border: 1px solid var(--bsh-line);
+  color: var(--bsh-navy); font-size: 15px; font-weight: 700;
+  cursor: pointer; font-family: var(--bsh-font); transition: all .18s ease;
+}
+.bsh-tab:hover { border-color: #C9D0E4; }
+.bsh-tab.is-active { background: var(--bsh-pink); border-color: var(--bsh-pink); color: #fff; }
+
+/* ---------------------------------------------------------------------
+   FORMS
+   --------------------------------------------------------------------- */
+.bsh-field { margin-bottom: 16px; }
+.bsh-field__label { display: block; font-size: 13px; font-weight: 600; color: var(--bsh-muted); margin-bottom: 7px; }
+.bsh-input {
+  width: 100%; padding: 14px 16px;
+  border: 1px solid var(--bsh-line); border-radius: var(--bsh-radius-sm);
+  background: #fff; color: var(--bsh-navy);
+  font-family: var(--bsh-font); font-size: 15px; line-height: 1.4;
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+.bsh-input::placeholder { color: #AEB6C7; }
+.bsh-input:focus { outline: none; border-color: var(--bsh-blue); box-shadow: 0 0 0 4px rgba(47, 107, 255, .12); }
+.bsh-input[readonly] { background: var(--bsh-soft); color: var(--bsh-muted); }
+
+.bsh-alert { border-radius: var(--bsh-radius-sm); padding: 13px 16px; font-size: 14px; font-weight: 600; margin-bottom: 16px; }
+.bsh-alert--error { background: var(--bsh-pink-soft); color: var(--bsh-pink-dark); }
+.bsh-alert--ok    { background: #E6F7EE; color: #12784A; }
+.bsh-alert--info  { background: var(--bsh-blue-soft); color: var(--bsh-blue-dark); }
+
+/* ---------------------------------------------------------------------
+   LOADING AND EMPTY STATES
+   --------------------------------------------------------------------- */
+.bsh-skel {
+  background: linear-gradient(90deg, #EEF1F8 25%, #F7F9FD 37%, #EEF1F8 63%);
+  background-size: 400% 100%; animation: bsh-shimmer 1.3s ease infinite;
+  border-radius: var(--bsh-radius-sm);
+}
+@keyframes bsh-shimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+
+.bsh-spinner {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, .45); border-top-color: #fff;
+  animation: bsh-spin .7s linear infinite;
+}
+@keyframes bsh-spin { to { transform: rotate(360deg); } }
+
+.bsh-boot { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+.bsh-boot__dot {
+  width: 34px; height: 34px; border-radius: 50%;
+  border: 3px solid var(--bsh-line); border-top-color: var(--bsh-pink);
+  animation: bsh-spin .7s linear infinite;
+}
+.bsh-empty { text-align: center; padding: 48px 20px; color: var(--bsh-muted); }
+.bsh-empty__icon { font-size: 40px; margin-bottom: 12px; }
+
+/* ---------------------------------------------------------------------
+   SIGN IN / PASSWORD RESET
+   --------------------------------------------------------------------- */
+.bsh-auth { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+.bsh-auth__box { width: 100%; max-width: 440px; }
+.bsh-auth__logo { text-align: center; margin-bottom: 26px; }
+.bsh-auth__logo b {
+  font-size: 26px; font-weight: 800; font-style: italic; text-transform: uppercase;
+  color: var(--bsh-pink); letter-spacing: -.02em; display: block; line-height: 1.05;
+}
+.bsh-auth__logo span { font-size: 13px; color: var(--bsh-muted); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.bsh-auth__foot { text-align: center; margin-top: 22px; font-size: 13px; color: var(--bsh-muted); line-height: 1.6; }
+.bsh-auth__forgot { color: var(--bsh-blue); display: block; text-align: right; font-size: 13px; font-weight: 600; margin: -6px 0 20px; }
+
+/* ---------------------------------------------------------------------
+   HOME
+   --------------------------------------------------------------------- */
+.bsh-hero { padding: 44px 0 8px; }
+.bsh-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.bsh-shortcut {
+  display: block; background: #fff; border-radius: var(--bsh-radius-lg);
+  box-shadow: var(--bsh-shadow); padding: 26px;
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.bsh-shortcut:hover { transform: translateY(-3px); box-shadow: 0 16px 46px rgba(31,42,90,.12); }
+.bsh-shortcut__icon {
+  width: 46px; height: 46px; border-radius: 14px; margin-bottom: 16px;
+  display: flex; align-items: center; justify-content: center; font-size: 22px;
+  background: var(--bsh-pink-soft);
+}
+.bsh-shortcut--blue .bsh-shortcut__icon { background: var(--bsh-blue-soft); }
+.bsh-shortcut--navy .bsh-shortcut__icon { background: var(--bsh-soft); }
+.bsh-shortcut__title { font-size: 19px; font-weight: 800; letter-spacing: -.01em; margin-bottom: 6px; }
+.bsh-shortcut__text { font-size: 14px; color: var(--bsh-muted); line-height: 1.5; }
+.bsh-shortcut__meta { margin-top: 16px; }
+
+.bsh-recent { margin-top: 34px; }
+.bsh-recent__row { display: flex; align-items: center; gap: 16px; padding: 16px 0; border-top: 1px solid var(--bsh-line); }
+.bsh-recent__row:first-of-type { border-top: none; }
+.bsh-recent__row:hover { color: var(--bsh-pink); }
+.bsh-recent__title { font-weight: 700; font-size: 16px; }
+.bsh-recent__sum { font-size: 14px; color: var(--bsh-muted); margin-top: 2px; display: block; }
+.bsh-recent__arrow { margin-left: auto; color: var(--bsh-muted); font-size: 20px; flex: none; }
+
+/* ---------------------------------------------------------------------
+   KNOWLEDGE BASE
+   --------------------------------------------------------------------- */
+.bsh-kb { padding: 44px 0 72px; }
+.bsh-kb__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.bsh-art {
+  display: flex; flex-direction: column; gap: 10px;
+  background: var(--bsh-soft); border-radius: var(--bsh-radius-md); padding: 22px;
+  transition: background .18s ease, transform .18s ease;
+}
+.bsh-art:hover { background: #E9EDF8; transform: translateY(-2px); }
+.bsh-art__top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bsh-art__title { font-size: 18px; font-weight: 800; letter-spacing: -.01em; line-height: 1.3; }
+.bsh-art__sum { font-size: 14px; color: var(--bsh-muted); line-height: 1.55; }
+.bsh-art__more { margin-top: auto; font-size: 14px; font-weight: 700; color: var(--bsh-pink); }
+
+.bsh-kb__search { position: relative; margin-bottom: 22px; max-width: 460px; }
+.bsh-kb__search .bsh-input { padding-left: 44px; }
+.bsh-kb__search::before { content: '🔍'; position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 15px; opacity: .5; }
+
+.bsh-back { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--bsh-muted); margin-bottom: 20px; }
+.bsh-back:hover { color: var(--bsh-pink); }
+.bsh-art__meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 26px; }
+.bsh-art__cover { border-radius: var(--bsh-radius-md); margin-bottom: 26px; }
+
+/* article typography */
+.bsh-prose { font-size: 16px; line-height: 1.7; color: var(--bsh-navy-2); }
+.bsh-prose h2 { font-size: 24px; font-weight: 800; color: var(--bsh-navy); margin: 32px 0 12px; letter-spacing: -.01em; }
+.bsh-prose h3 { font-size: 19px; font-weight: 800; color: var(--bsh-navy); margin: 26px 0 10px; }
+.bsh-prose h4 { font-size: 17px; font-weight: 700; color: var(--bsh-navy); margin: 22px 0 8px; }
+.bsh-prose > *:first-child { margin-top: 0; }
+.bsh-prose p { margin: 0 0 16px; }
+.bsh-prose ul, .bsh-prose ol { margin: 0 0 18px; padding-left: 22px; }
+.bsh-prose li { margin-bottom: 8px; }
+.bsh-prose li::marker { color: var(--bsh-pink); font-weight: 700; }
+.bsh-prose strong { color: var(--bsh-navy); font-weight: 800; }
+.bsh-prose hr { border: none; border-top: 1px solid var(--bsh-line); margin: 28px 0; }
+.bsh-prose img { border-radius: var(--bsh-radius-md); margin: 18px 0; }
+.bsh-prose code { background: var(--bsh-soft); border-radius: 6px; padding: 2px 6px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .9em; }
+.bsh-prose blockquote { margin: 22px 0; padding: 16px 20px; background: var(--bsh-pink-soft); border-radius: var(--bsh-radius-sm); color: var(--bsh-navy); font-weight: 600; }
+.bsh-prose table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 15px; }
+.bsh-prose th, .bsh-prose td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--bsh-line); }
+.bsh-prose th { color: var(--bsh-muted); font-size: 13px; font-weight: 600; }
+.bsh-prose__scroll { overflow-x: auto; }
+
+/* attachments */
+.bsh-files { margin-top: 34px; }
+.bsh-file { display: flex; align-items: center; gap: 14px; background: var(--bsh-soft); border-radius: var(--bsh-radius-sm); padding: 14px 18px; margin-bottom: 10px; }
+.bsh-file:hover { background: #E9EDF8; }
+.bsh-file__icon { font-size: 20px; flex: none; }
+.bsh-file__title { font-weight: 700; font-size: 15px; display: block; }
+.bsh-file__size { font-size: 13px; color: var(--bsh-muted); }
+.bsh-file__dl { margin-left: auto; font-size: 14px; font-weight: 700; color: var(--bsh-blue); flex: none; }
+
+/* ---------------------------------------------------------------------
+   PROFILE
+   --------------------------------------------------------------------- */
+.bsh-profile { padding: 44px 0 72px; }
+.bsh-profile__cols { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.bsh-profile__row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.bsh-profile__head { display: flex; align-items: center; gap: 16px; margin-bottom: 26px; }
+.bsh-profile__ava {
+  width: 62px; height: 62px; border-radius: 50%; flex: none;
+  background: var(--bsh-pink); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 800;
+}
+.bsh-profile__name { font-size: 21px; font-weight: 800; letter-spacing: -.01em; line-height: 1.2; }
+.bsh-profile__mail { font-size: 14px; color: var(--bsh-muted); }
+.bsh-profile__actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+.bsh-tiles { display: grid; gap: 12px; margin-bottom: 20px; }
+.bsh-divider { border: none; border-top: 1px solid var(--bsh-line); margin: 30px 0; }
+
+/* ---------------------------------------------------------------------
+   RESPONSIVE
+   --------------------------------------------------------------------- */
+@media (max-width: 960px) {
+  .bsh-cards { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .bsh-profile__cols { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 720px) {
+  .bsh-card { padding: 22px; border-radius: var(--bsh-radius-md); }
+  .bsh-cards, .bsh-kb__grid, .bsh-profile__row { grid-template-columns: minmax(0, 1fr); }
+  .bsh-hero { padding-top: 28px; }
+  .bsh-kb, .bsh-profile { padding: 28px 0 48px; }
+  .bsh-nav { border-radius: var(--bsh-radius-lg); padding: 12px 14px; flex-wrap: wrap; }
+  .bsh-nav__links { order: 3; width: 100%; overflow-x: auto; padding-top: 8px; }
+  .bsh-nav__side { margin-left: auto; }
+}
+</style>
+
+<div class="bsh" id="bsh-app">
+  <div class="bsh-boot"><div class="bsh-boot__dot"></div></div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ===================================================================
+     CONFIG — FILL IN THESE TWO VALUES
+     Supabase Dashboard -> Project Settings -> API
+       url     -> "Project URL"
+       anonKey -> "Project API keys" -> anon / public
+     The anon key is meant to be public and is safe in page source:
+     access is limited by RLS policies, not by hiding the key.
+     Never put the service_role key here — it bypasses RLS.
+     =================================================================== */
+  var CONFIG = {
+    url:     'https://YOUR-PROJECT.supabase.co',
+    anonKey: 'YOUR-ANON-KEY',
+    brand:   'Battle Start'
+  };
+
+  var LIB_URL = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';
+
+  var app = document.getElementById('bsh-app');
+  var sb  = null;
+
+  var S = {
+    session:  null,   /* current Supabase session      */
+    profile:  null,   /* the client's profiles row     */
+    cats:     null,   /* knowledge base categories     */
+    arts:     null,   /* knowledge base articles       */
+    kbQuery:  '',     /* current search text           */
+    recovery: false,  /* arrived from a recovery email */
+    loaded:   false   /* profile + index fetched        */
+  };
+
+  /* ===================================================================
+     HELPERS
+     =================================================================== */
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function initials(name, email) {
+    var src = (name || '').trim();
+    if (src) {
+      var parts = src.split(/\s+/);
+      return (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+    }
+    return (email || '?').slice(0, 2).toUpperCase();
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    try { return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }); }
+    catch (e) { return '—'; }
+  }
+
+  /* Supabase errors rewritten for people */
+  var ERRORS = {
+    'Invalid login credentials':                'Wrong email or password',
+    'Email not confirmed':                      'This email is not confirmed yet. Contact your manager.',
+    'User not found':                           'No such user',
+    'Password should be at least 6 characters': 'Use at least 6 characters',
+    'New password should be different from the old password': 'The new password must differ from the old one',
+    'Email rate limit exceeded':                'Too many emails sent. Try again in a few minutes.',
+    'For security purposes, you can only request this after 60 seconds':
+                                                'You can try again in a minute'
+  };
+  function humanError(err) {
+    if (!err) return 'Something went wrong';
+    var msg = err.message || String(err);
+    if (ERRORS[msg]) return ERRORS[msg];
+    for (var key in ERRORS) { if (msg.indexOf(key) === 0) return ERRORS[key]; }
+    if (/fetch|network|Failed to fetch/i.test(msg)) return 'No connection to the server. Check your internet.';
+    return msg;
+  }
+
+  function alertHtml(kind, text) {
+    return '<div class="bsh-alert bsh-alert--' + kind + '">' + esc(text) + '</div>';
+  }
+
+  /* -------------------------------------------------------------------
+     Small Markdown renderer for knowledge base articles.
+     HTML is escaped first, so an article cannot inject markup.
+     Supported: headings, lists, tables, quotes, code, links, images,
+     bold/italic and horizontal rules.
+     ------------------------------------------------------------------- */
+  function markdown(src) {
+    if (!src) return '';
+    var lines = esc(src).replace(/\r\n/g, '\n').split('\n');
+    var out = [], i = 0;
+
+    function inline(s) {
+      return s
+        .replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, '<img src="$2" alt="$1">')
+        .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>');
+    }
+    function cells(line) {
+      return line.split('|').map(function (c) { return c.trim(); })
+        .filter(function (c, idx, arr) { return !(c === '' && (idx === 0 || idx === arr.length - 1)); });
+    }
+
+    while (i < lines.length) {
+      var line = lines[i];
+      if (!line.trim()) { i++; continue; }
+
+      /* horizontal rule */
+      if (/^(-{3,}|\*{3,}|_{3,})\s*$/.test(line)) { out.push('<hr>'); i++; continue; }
+
+      /* headings */
+      var h = /^(#{1,4})\s+(.*)$/.exec(line);
+      if (h) {
+        var lvl = Math.min(h[1].length + 1, 6);
+        out.push('<h' + lvl + '>' + inline(h[2]) + '</h' + lvl + '>');
+        i++; continue;
+      }
+
+      /* table */
+      if (line.indexOf('|') !== -1 && /^\s*\|?[\s:|-]+\|[\s:|-]*$/.test(lines[i + 1] || '')) {
+        var head = cells(line);
+        i += 2;
+        var rows = [];
+        while (i < lines.length && lines[i].indexOf('|') !== -1) { rows.push(cells(lines[i])); i++; }
+        out.push('<div class="bsh-prose__scroll"><table><thead><tr>' +
+          head.map(function (c) { return '<th>' + inline(c) + '</th>'; }).join('') +
+          '</tr></thead><tbody>' +
+          rows.map(function (r) {
+            return '<tr>' + r.map(function (c) { return '<td>' + inline(c) + '</td>'; }).join('') + '</tr>';
+          }).join('') +
+          '</tbody></table></div>');
+        continue;
+      }
+
+      /* blockquote */
+      if (/^>\s?/.test(line)) {
+        var quote = [];
+        while (i < lines.length && /^>\s?/.test(lines[i])) { quote.push(lines[i].replace(/^>\s?/, '')); i++; }
+        out.push('<blockquote>' + inline(quote.join(' ')) + '</blockquote>');
+        continue;
+      }
+
+      /* ordered list */
+      if (/^\s*\d+\.\s+/.test(line)) {
+        var ol = [];
+        while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) {
+          ol.push('<li>' + inline(lines[i].replace(/^\s*\d+\.\s+/, '')) + '</li>'); i++;
+        }
+        out.push('<ol>' + ol.join('') + '</ol>');
+        continue;
+      }
+
+      /* unordered list */
+      if (/^\s*[-*+]\s+/.test(line)) {
+        var ul = [];
+        while (i < lines.length && /^\s*[-*+]\s+/.test(lines[i])) {
+          ul.push('<li>' + inline(lines[i].replace(/^\s*[-*+]\s+/, '')) + '</li>'); i++;
+        }
+        out.push('<ul>' + ul.join('') + '</ul>');
+        continue;
+      }
+
+      /* paragraph */
+      var para = [];
+      while (i < lines.length && lines[i].trim() &&
+             !/^(#{1,4}\s|>|\s*[-*+]\s|\s*\d+\.\s)/.test(lines[i])) { para.push(lines[i]); i++; }
+      out.push('<p>' + inline(para.join(' ')) + '</p>');
+    }
+    return out.join('\n');
+  }
+
+  /* ===================================================================
+     DATA
+     =================================================================== */
+  function loadProfile() {
+    return sb.from('profiles').select('*').maybeSingle().then(function (r) {
+      if (r.error) throw r.error;
+      S.profile = r.data;
+      return S.profile;
+    });
+  }
+
+  /* Private screens need the profile and the knowledge base index.
+     Fetching them here rather than at each entry point means no route
+     can arrive at a screen with half its data missing. */
+  function ensureData() {
+    if (S.loaded) return Promise.resolve();
+    return Promise.all([loadProfile(), loadIndex()]).then(function () { S.loaded = true; });
+  }
+
+  function loadIndex() {
+    if (S.cats && S.arts) return Promise.resolve();
+    return Promise.all([
+      sb.from('kb_categories').select('*').eq('is_published', true).order('sort_order', { ascending: true }),
+      sb.from('kb_articles')
+        .select('id, slug, title, summary, reading_time, sort_order, created_at, category_id')
+        .eq('is_published', true).order('sort_order', { ascending: true })
+    ]).then(function (res) {
+      if (res[0].error) throw res[0].error;
+      if (res[1].error) throw res[1].error;
+      S.cats = res[0].data || [];
+      S.arts = res[1].data || [];
+    });
+  }
+
+  function catById(id) {
+    for (var i = 0; i < (S.cats || []).length; i++) { if (S.cats[i].id === id) return S.cats[i]; }
+    return null;
+  }
+  function catBySlug(slug) {
+    for (var i = 0; i < (S.cats || []).length; i++) { if (S.cats[i].slug === slug) return S.cats[i]; }
+    return null;
+  }
+
+  /* ===================================================================
+     RENDERING
+     =================================================================== */
+  function paint(html) { app.innerHTML = html; }
+
+  function booting() {
+    paint('<div class="bsh-boot"><div class="bsh-boot__dot"></div></div>');
+  }
+
+  function fatal(text) {
+    paint('<div class="bsh-wrap bsh-section"><div class="bsh-card">' +
+          alertHtml('error', text) + '</div></div>');
+  }
+
+  /* The pill header, shown on every private screen */
+  function header(active) {
+    var p = S.profile || {};
+    var email = S.session ? S.session.user.email : '';
+    var links = [
+      { hash: '#/hub',     label: 'Hub',            key: 'hub' },
+      { hash: '#/kb',      label: 'Knowledge base', key: 'kb' },
+      { hash: '#/profile', label: 'Profile',        key: 'profile' }
+    ];
+
+    return '<div class="bsh-wrap"><nav class="bsh-nav">' +
+      '<a class="bsh-nav__logo" href="#/hub">Battle<br>Start</a>' +
+      '<div class="bsh-nav__links">' +
+        links.map(function (l) {
+          return '<a class="bsh-nav__link' + (l.key === active ? ' is-active' : '') +
+                 '" href="' + l.hash + '">' + l.label + '</a>';
+        }).join('') +
+      '</div>' +
+      '<div class="bsh-nav__side">' +
+        '<div class="bsh-nav__user">' +
+          '<div class="bsh-nav__avatar">' + esc(initials(p.full_name, email)) + '</div>' +
+          '<div>' +
+            '<div class="bsh-nav__name">' + esc(p.full_name || email) + '</div>' +
+            '<div class="bsh-nav__company">' + esc(p.company || p.city || email) + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<button class="bsh-btn bsh-btn--ghost bsh-btn--sm" id="bsh-logout" type="button">Sign out</button>' +
+      '</div>' +
+    '</nav></div>';
+  }
+
+  function bindLogout() {
+    var btn = document.getElementById('bsh-logout');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      btn.classList.add('is-busy');
+      btn.textContent = 'Signing out…';
+      sb.auth.signOut().then(function () {
+        S.session = null; S.profile = null; S.loaded = false;
+        S.cats = null; S.arts = null;
+        go('#/login');
+      });
+    });
+  }
+
+  /* ===================================================================
+     SCREEN: SIGN IN
+     =================================================================== */
+  function screenLogin() {
+    paint(
+      '<div class="bsh-auth"><div class="bsh-auth__box">' +
+        '<div class="bsh-auth__logo"><b>' + esc(CONFIG.brand) + '</b><span>Client hub</span></div>' +
+        '<div class="bsh-card">' +
+          '<h1 class="bsh-h2 bsh-center" style="margin-bottom:6px">' +
+            '<span class="bsh-accent">Sign in</span> to the hub</h1>' +
+          '<p class="bsh-lead bsh-center bsh-muted" style="font-size:15px;margin-bottom:26px">' +
+            'Access is granted by invitation</p>' +
+          '<div id="bsh-msg"></div>' +
+          '<form id="bsh-form" novalidate>' +
+            '<div class="bsh-field">' +
+              '<label class="bsh-field__label" for="bsh-email">Email</label>' +
+              '<input class="bsh-input" id="bsh-email" type="email" autocomplete="username" placeholder="you@example.com">' +
+            '</div>' +
+            '<div class="bsh-field">' +
+              '<label class="bsh-field__label" for="bsh-pass">Password</label>' +
+              '<input class="bsh-input" id="bsh-pass" type="password" autocomplete="current-password" placeholder="••••••••">' +
+            '</div>' +
+            '<a class="bsh-auth__forgot" href="#" id="bsh-forgot">Forgot your password?</a>' +
+            '<button class="bsh-btn bsh-btn--primary bsh-btn--wide" type="submit" id="bsh-submit">Sign in</button>' +
+          '</form>' +
+        '</div>' +
+        '<p class="bsh-auth__foot">No access yet? Message your ' + esc(CONFIG.brand) + ' manager —<br>' +
+          'accounts are created by hand.</p>' +
+      '</div></div>'
+    );
+
+    var form   = document.getElementById('bsh-form');
+    var btn    = document.getElementById('bsh-submit');
+    var msg    = document.getElementById('bsh-msg');
+    var email  = document.getElementById('bsh-email');
+    var pass   = document.getElementById('bsh-pass');
+    var forgot = document.getElementById('bsh-forgot');
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      msg.innerHTML = '';
+
+      var mail = email.value.trim(), pwd = pass.value;
+      if (!mail || !pwd) { msg.innerHTML = alertHtml('error', 'Enter your email and password'); return; }
+
+      btn.classList.add('is-busy');
+      btn.innerHTML = '<span class="bsh-spinner"></span>Signing in…';
+
+      sb.auth.signInWithPassword({ email: mail, password: pwd }).then(function (r) {
+        if (r.error) {
+          btn.classList.remove('is-busy');
+          btn.textContent = 'Sign in';
+          msg.innerHTML = alertHtml('error', humanError(r.error));
+          pass.value = '';
+          pass.focus();
+          return;
+        }
+        S.session = r.data.session;
+        S.loaded  = false;
+        go('#/hub');
+      });
+    });
+
+    forgot.addEventListener('click', function (e) {
+      e.preventDefault();
+      msg.innerHTML = '';
+
+      var mail = email.value.trim();
+      if (!mail) {
+        msg.innerHTML = alertHtml('info', 'Type your email in the field above, then click "Forgot your password?" again');
+        email.focus();
+        return;
+      }
+
+      forgot.textContent = 'Sending…';
+      sb.auth.resetPasswordForEmail(mail, { redirectTo: pageUrl() }).then(function (r) {
+        forgot.textContent = 'Forgot your password?';
+        msg.innerHTML = r.error
+          ? alertHtml('error', humanError(r.error))
+          : alertHtml('ok', 'A reset link is on its way to ' + mail);
+      });
+    });
+  }
+
+  /* ===================================================================
+     SCREEN: SET A NEW PASSWORD
+     Reached from the recovery email. The link carries a token in the
+     URL hash, which supabase-js consumes on start-up.
+     =================================================================== */
+  function screenReset() {
+    paint(
+      '<div class="bsh-auth"><div class="bsh-auth__box">' +
+        '<div class="bsh-card">' +
+          '<h1 class="bsh-h2 bsh-center" style="margin-bottom:6px">' +
+            '<span class="bsh-accent">New</span> password</h1>' +
+          '<p class="bsh-lead bsh-center bsh-muted" style="font-size:15px;margin-bottom:26px">' +
+            'Choose a password for the hub</p>' +
+          '<div id="bsh-msg"></div>' +
+          '<form id="bsh-form" novalidate>' +
+            '<div class="bsh-field">' +
+              '<label class="bsh-field__label" for="bsh-p1">Password</label>' +
+              '<input class="bsh-input" id="bsh-p1" type="password" autocomplete="new-password" placeholder="At least 8 characters">' +
+            '</div>' +
+            '<div class="bsh-field">' +
+              '<label class="bsh-field__label" for="bsh-p2">Repeat password</label>' +
+              '<input class="bsh-input" id="bsh-p2" type="password" autocomplete="new-password" placeholder="Once more">' +
+            '</div>' +
+            '<button class="bsh-btn bsh-btn--primary bsh-btn--wide" type="submit" id="bsh-submit">Save password</button>' +
+          '</form>' +
+        '</div>' +
+        '<p class="bsh-center" style="margin-top:20px;font-size:13px">' +
+          '<a class="bsh-link" href="#/login">Back to sign in</a></p>' +
+      '</div></div>'
+    );
+
+    var form = document.getElementById('bsh-form');
+    var btn  = document.getElementById('bsh-submit');
+    var msg  = document.getElementById('bsh-msg');
+    var p1   = document.getElementById('bsh-p1');
+    var p2   = document.getElementById('bsh-p2');
+
+    if (!S.session) {
+      msg.innerHTML = alertHtml('error', 'This link is invalid or has expired. Request a new one from the sign-in page.');
+      form.querySelectorAll('input, button').forEach(function (el) { el.disabled = true; });
+      return;
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      msg.innerHTML = '';
+
+      if (p1.value.length < 8)   { msg.innerHTML = alertHtml('error', 'Use at least 8 characters'); return; }
+      if (p1.value !== p2.value) { msg.innerHTML = alertHtml('error', 'The passwords do not match'); return; }
+
+      btn.classList.add('is-busy');
+      btn.innerHTML = '<span class="bsh-spinner"></span>Saving…';
+
+      sb.auth.updateUser({ password: p1.value }).then(function (r) {
+        if (r.error) {
+          btn.classList.remove('is-busy');
+          btn.textContent = 'Save password';
+          msg.innerHTML = alertHtml('error', humanError(r.error));
+          return;
+        }
+        msg.innerHTML = alertHtml('ok', 'Password saved. Opening the hub…');
+        setTimeout(function () { go('#/hub'); }, 1200);
+      });
+    });
+  }
+
+  /* ===================================================================
+     SCREEN: HOME
+     =================================================================== */
+  function screenHome() {
+    var p = S.profile || {};
+    var first = (p.full_name || '').trim().split(/\s+/)[0];
+
+    var recent = (S.arts || []).slice().sort(function (a, b) {
+      return (b.created_at || '') > (a.created_at || '') ? 1 : -1;
+    }).slice(0, 5);
+
+    var n = (S.arts || []).length;
+
+    paint(header('hub') +
+      '<div class="bsh-wrap">' +
+        '<section class="bsh-hero">' +
+          '<h1 class="bsh-h1"><span class="bsh-accent">Hello</span>' +
+            (first ? ', ' + esc(first) : '') + '</h1>' +
+          '<p class="bsh-lead" style="max-width:620px">Everything ' + esc(CONFIG.brand) +
+            ' publishes for its clients lives here: guides, procedures and paperwork ' +
+            'for launching and running your venue.</p>' +
+        '</section>' +
+
+        '<section class="bsh-section"><div class="bsh-cards">' +
+          '<a class="bsh-shortcut" href="#/kb">' +
+            '<div class="bsh-shortcut__icon">📚</div>' +
+            '<div class="bsh-shortcut__title">Knowledge base</div>' +
+            '<div class="bsh-shortcut__text">Guides, procedures, artwork and documents, sorted by area.</div>' +
+            '<div class="bsh-shortcut__meta"><span class="bsh-badge">' +
+              n + (n === 1 ? ' article' : ' articles') + '</span></div>' +
+          '</a>' +
+          '<a class="bsh-shortcut bsh-shortcut--blue" href="#/profile">' +
+            '<div class="bsh-shortcut__icon">👤</div>' +
+            '<div class="bsh-shortcut__title">Profile</div>' +
+            '<div class="bsh-shortcut__text">Your venue details, contacts and password.</div>' +
+            '<div class="bsh-shortcut__meta"><span class="bsh-badge bsh-badge--blue">' +
+              esc(p.company || p.city || 'Add your details') + '</span></div>' +
+          '</a>' +
+          '<div class="bsh-shortcut bsh-shortcut--navy">' +
+            '<div class="bsh-shortcut__icon">💬</div>' +
+            '<div class="bsh-shortcut__title">Your manager</div>' +
+            '<div class="bsh-shortcut__text">' +
+              (p.manager_name
+                ? esc(p.manager_name) + (p.manager_contact ? '<br>' + esc(p.manager_contact) : '')
+                : 'No manager assigned yet. Post in the support chat.') +
+            '</div>' +
+          '</div>' +
+        '</div></section>' +
+
+        '<section class="bsh-section bsh-recent">' +
+          '<h2 class="bsh-h2"><span class="bsh-accent">Latest</span> material</h2>' +
+          '<div class="bsh-card bsh-card--flat" style="margin-top:18px">' +
+            (recent.length
+              ? recent.map(function (a) {
+                  var c = catById(a.category_id);
+                  return '<a class="bsh-recent__row" href="#/kb/a/' + esc(a.slug) + '">' +
+                    (c ? '<span class="bsh-badge">' + esc(c.title) + '</span>' : '') +
+                    '<span><span class="bsh-recent__title">' + esc(a.title) + '</span>' +
+                    (a.summary ? '<span class="bsh-recent__sum">' + esc(a.summary) + '</span>' : '') +
+                    '</span><span class="bsh-recent__arrow">→</span></a>';
+                }).join('')
+              : '<div class="bsh-empty"><div class="bsh-empty__icon">📭</div>Nothing published yet</div>') +
+          '</div>' +
+        '</section>' +
+      '</div>');
+
+    bindLogout();
+  }
+
+  /* ===================================================================
+     SCREEN: KNOWLEDGE BASE LIST
+     =================================================================== */
+  function screenKb(catSlug) {
+    var active = catSlug ? catBySlug(catSlug) : null;
+
+    var list = (S.arts || []).filter(function (a) {
+      if (active && a.category_id !== active.id) return false;
+      if (S.kbQuery) {
+        var hay = (a.title + ' ' + (a.summary || '')).toLowerCase();
+        if (hay.indexOf(S.kbQuery.toLowerCase()) === -1) return false;
+      }
+      return true;
+    });
+
+    var tabs = '<button class="bsh-tab' + (!active ? ' is-active' : '') + '" data-cat="">Everything</button>' +
+      (S.cats || []).map(function (c) {
+        return '<button class="bsh-tab' + (active && active.id === c.id ? ' is-active' : '') +
+               '" data-cat="' + esc(c.slug) + '">' +
+               (c.icon ? esc(c.icon) + ' ' : '') + esc(c.title) + '</button>';
+      }).join('');
+
+    var cards = list.map(function (a) {
+      var c = catById(a.category_id);
+      return '<a class="bsh-art" href="#/kb/a/' + esc(a.slug) + '">' +
+        '<div class="bsh-art__top">' +
+          (c ? '<span class="bsh-badge">' + esc(c.title) + '</span>' : '') +
+          (a.reading_time ? '<span class="bsh-label">' + a.reading_time + ' min</span>' : '') +
+        '</div>' +
+        '<div class="bsh-art__title">' + esc(a.title) + '</div>' +
+        (a.summary ? '<div class="bsh-art__sum">' + esc(a.summary) + '</div>' : '') +
+        '<div class="bsh-art__more">Read →</div>' +
+      '</a>';
+    }).join('');
+
+    paint(header('kb') +
+      '<div class="bsh-wrap bsh-kb">' +
+        '<h1 class="bsh-h1"><span class="bsh-accent">Knowledge</span> base</h1>' +
+        '<p class="bsh-lead" style="margin-bottom:28px">' +
+          (active && active.description
+            ? esc(active.description)
+            : 'Everything about launching and running a ' + esc(CONFIG.brand) + ' venue.') +
+        '</p>' +
+        '<div class="bsh-card">' +
+          '<div class="bsh-kb__search">' +
+            '<input class="bsh-input" id="bsh-q" type="search" placeholder="Search the knowledge base" value="' +
+              esc(S.kbQuery) + '">' +
+          '</div>' +
+          '<div class="bsh-tabs">' + tabs + '</div>' +
+          (cards
+            ? '<div class="bsh-kb__grid">' + cards + '</div>'
+            : '<div class="bsh-empty"><div class="bsh-empty__icon">🔍</div>' +
+              (S.kbQuery ? 'Nothing matches that search' : 'This category is empty so far') + '</div>') +
+        '</div>' +
+      '</div>');
+
+    bindLogout();
+
+    app.querySelectorAll('.bsh-tab').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var slug = btn.getAttribute('data-cat');
+        go(slug ? '#/kb/c/' + slug : '#/kb');
+      });
+    });
+
+    var input = document.getElementById('bsh-q');
+    input.addEventListener('input', function () {
+      S.kbQuery = input.value;
+      var pos = input.selectionStart;
+      screenKb(catSlug);
+      var again = document.getElementById('bsh-q');
+      again.focus();
+      again.setSelectionRange(pos, pos);
+    });
+  }
+
+  /* ===================================================================
+     SCREEN: ARTICLE
+     =================================================================== */
+  function screenArticle(slug) {
+    paint(header('kb') +
+      '<div class="bsh-wrap bsh-kb"><div class="bsh-card">' +
+        '<div class="bsh-skel" style="height:30px;width:60%;margin-bottom:20px"></div>' +
+        '<div class="bsh-skel" style="height:16px;margin-bottom:10px"></div>' +
+        '<div class="bsh-skel" style="height:16px;width:90%"></div>' +
+      '</div></div>');
+    bindLogout();
+
+    var article = null;
+
+    sb.from('kb_articles').select('*').eq('slug', slug).eq('is_published', true).maybeSingle()
+      .then(function (r) {
+        if (r.error) throw r.error;
+        if (!r.data) {
+          paint(header('kb') +
+            '<div class="bsh-wrap bsh-kb"><a class="bsh-back" href="#/kb">← All articles</a>' +
+            '<div class="bsh-card"><div class="bsh-empty">' +
+            '<div class="bsh-empty__icon">🤷</div>Article not found</div></div></div>');
+          bindLogout();
+          return null;
+        }
+        article = r.data;
+        return sb.from('kb_files').select('*').eq('article_id', article.id)
+          .order('sort_order', { ascending: true });
+      })
+      .then(function (f) {
+        if (!article) return;
+        draw(article, (f && f.data) || []);
+      })
+      .catch(function (err) {
+        paint(header('kb') + '<div class="bsh-wrap bsh-kb"><div class="bsh-card">' +
+              alertHtml('error', humanError(err)) + '</div></div>');
+        bindLogout();
+      });
+
+    function draw(art, files) {
+      var c = catById(art.category_id);
+      var icons = { pdf: '📕', zip: '🗜', image: '🖼', video: '🎬', link: '🔗', file: '📎' };
+
+      paint(header('kb') +
+        '<div class="bsh-wrap bsh-kb">' +
+          '<a class="bsh-back" href="#/kb' + (c ? '/c/' + esc(c.slug) : '') + '">← ' +
+            (c ? esc(c.title) : 'All articles') + '</a>' +
+          '<div class="bsh-card" style="max-width:860px;margin:0 auto">' +
+            '<h1 class="bsh-h2">' + esc(art.title) + '</h1>' +
+            '<div class="bsh-art__meta">' +
+              (c ? '<span class="bsh-badge bsh-badge--pink">' + esc(c.title) + '</span>' : '') +
+              (art.reading_time ? '<span class="bsh-badge">' + art.reading_time + ' min read</span>' : '') +
+              '<span class="bsh-badge">Updated ' + fmtDate(art.updated_at || art.created_at) + '</span>' +
+            '</div>' +
+            (art.cover_url ? '<img class="bsh-art__cover" src="' + esc(art.cover_url) + '" alt="">' : '') +
+            '<div class="bsh-prose">' + markdown(art.content_md) + '</div>' +
+            (files.length
+              ? '<div class="bsh-files"><h3 class="bsh-h3">Files</h3>' +
+                files.map(function (f) {
+                  return '<a class="bsh-file" href="' + esc(f.url) + '" target="_blank" rel="noopener">' +
+                    '<span class="bsh-file__icon">' + (icons[f.kind] || icons.file) + '</span>' +
+                    '<span><span class="bsh-file__title">' + esc(f.title) + '</span>' +
+                    (f.size_label ? '<span class="bsh-file__size">' + esc(f.size_label) + '</span>' : '') +
+                    '</span><span class="bsh-file__dl">Download</span></a>';
+                }).join('') + '</div>'
+              : '') +
+          '</div>' +
+        '</div>');
+
+      bindLogout();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  /* ===================================================================
+     SCREEN: PROFILE
+     =================================================================== */
+  function screenProfile() {
+    var p = S.profile || {};
+    var email = S.session.user.email;
+
+    function field(id, label, value, type, ph) {
+      return '<div class="bsh-field">' +
+        '<label class="bsh-field__label" for="' + id + '">' + label + '</label>' +
+        '<input class="bsh-input" id="' + id + '" type="' + (type || 'text') +
+          '" value="' + esc(value || '') + '" placeholder="' + esc(ph || '') + '">' +
+      '</div>';
+    }
+
+    paint(header('profile') +
+      '<div class="bsh-wrap bsh-profile">' +
+        '<h1 class="bsh-h1"><span class="bsh-accent">Your</span> profile</h1>' +
+        '<p class="bsh-lead" style="margin-bottom:30px">Details of your venue. ' +
+          'Only you and the ' + esc(CONFIG.brand) + ' team can see them.</p>' +
+
+        '<div class="bsh-profile__cols">' +
+
+          '<div class="bsh-card">' +
+            '<div class="bsh-profile__head">' +
+              '<div class="bsh-profile__ava">' + esc(initials(p.full_name, email)) + '</div>' +
+              '<div>' +
+                '<div class="bsh-profile__name">' + esc(p.full_name || 'Unnamed') + '</div>' +
+                '<div class="bsh-profile__mail">' + esc(email) + '</div>' +
+              '</div>' +
+            '</div>' +
+
+            '<div id="bsh-msg">' +
+              (S.profile ? '' : alertHtml('info', 'No profile yet. Save your details and one will be created.')) +
+            '</div>' +
+
+            '<form id="bsh-form">' +
+              field('bsh-f-name', 'Full name', p.full_name, 'text', 'How should we address you?') +
+              '<div class="bsh-profile__row">' +
+                field('bsh-f-company', 'Venue name', p.company, 'text', 'Battle Start Camden') +
+                field('bsh-f-city', 'City', p.city, 'text', 'London') +
+              '</div>' +
+              '<div class="bsh-profile__row">' +
+                field('bsh-f-phone', 'Phone', p.phone, 'tel', '+44 20 0000 0000') +
+                field('bsh-f-tg', 'Telegram', p.telegram, 'text', '@username') +
+              '</div>' +
+              '<div class="bsh-field">' +
+                '<label class="bsh-field__label" for="bsh-f-email">Sign-in email</label>' +
+                '<input class="bsh-input" id="bsh-f-email" type="email" value="' + esc(email) + '" readonly>' +
+                '<p class="bsh-label" style="margin-top:7px">Only ' + esc(CONFIG.brand) +
+                  ' can change this — message your manager.</p>' +
+              '</div>' +
+              '<div class="bsh-profile__actions">' +
+                '<button class="bsh-btn bsh-btn--primary" type="submit" id="bsh-save">Save</button>' +
+                '<button class="bsh-btn bsh-btn--ghost" type="button" id="bsh-cancel">Cancel</button>' +
+              '</div>' +
+            '</form>' +
+
+            '<hr class="bsh-divider">' +
+
+            '<h3 class="bsh-h3">Change password</h3>' +
+            '<p class="bsh-label" style="margin-bottom:18px">The new password takes effect immediately.</p>' +
+            '<div id="bsh-pw-msg"></div>' +
+            '<form id="bsh-pw-form">' +
+              '<div class="bsh-profile__row">' +
+                '<div class="bsh-field">' +
+                  '<label class="bsh-field__label" for="bsh-pw1">New password</label>' +
+                  '<input class="bsh-input" id="bsh-pw1" type="password" autocomplete="new-password" placeholder="At least 8 characters">' +
+                '</div>' +
+                '<div class="bsh-field">' +
+                  '<label class="bsh-field__label" for="bsh-pw2">Repeat</label>' +
+                  '<input class="bsh-input" id="bsh-pw2" type="password" autocomplete="new-password" placeholder="Once more">' +
+                '</div>' +
+              '</div>' +
+              '<button class="bsh-btn bsh-btn--ghost" type="submit" id="bsh-pw-save">Update password</button>' +
+            '</form>' +
+          '</div>' +
+
+          '<div>' +
+            '<div class="bsh-tiles">' +
+              tile('Venue', p.company || 'Not set') +
+              tile('City', p.city || 'Not set') +
+              tile('Access status', p.status === 'suspended' ? 'Suspended' : 'Active', true) +
+              tile('Member since', fmtDate(p.created_at || S.session.user.created_at)) +
+            '</div>' +
+            '<div class="bsh-card bsh-card--flat bsh-card--pad-sm">' +
+              '<div class="bsh-tile__label" style="margin-bottom:10px">Your manager</div>' +
+              '<div style="font-size:14px">' +
+                (p.manager_name
+                  ? '<b>' + esc(p.manager_name) + '</b>' +
+                    (p.manager_contact ? '<br><span class="bsh-muted">' + esc(p.manager_contact) + '</span>' : '')
+                  : '<span class="bsh-muted">Not assigned yet</span>') +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+
+        '</div>' +
+      '</div>');
+
+    bindLogout();
+
+    var msg   = document.getElementById('bsh-msg');
+    var pwMsg = document.getElementById('bsh-pw-msg');
+    var save  = document.getElementById('bsh-save');
+
+    document.getElementById('bsh-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      msg.innerHTML = '';
+      save.classList.add('is-busy');
+      save.innerHTML = '<span class="bsh-spinner"></span>Saving…';
+
+      var patch = {
+        id:        S.session.user.id,
+        full_name: val('bsh-f-name'),
+        company:   val('bsh-f-company'),
+        city:      val('bsh-f-city'),
+        phone:     val('bsh-f-phone'),
+        telegram:  val('bsh-f-tg')
+      };
+
+      sb.from('profiles').upsert(patch).select().single().then(function (r) {
+        save.classList.remove('is-busy');
+        save.textContent = 'Save';
+        if (r.error) { msg.innerHTML = alertHtml('error', humanError(r.error)); return; }
+        S.profile = r.data;
+        screenProfile();
+        document.getElementById('bsh-msg').innerHTML = alertHtml('ok', 'Details saved');
+      });
+    });
+
+    document.getElementById('bsh-cancel').addEventListener('click', function () { screenProfile(); });
+
+    document.getElementById('bsh-pw-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      pwMsg.innerHTML = '';
+      var p1 = document.getElementById('bsh-pw1');
+      var p2 = document.getElementById('bsh-pw2');
+      var btn = document.getElementById('bsh-pw-save');
+
+      if (p1.value.length < 8)   { pwMsg.innerHTML = alertHtml('error', 'Use at least 8 characters'); return; }
+      if (p1.value !== p2.value) { pwMsg.innerHTML = alertHtml('error', 'The passwords do not match'); return; }
+
+      btn.classList.add('is-busy');
+      btn.textContent = 'Updating…';
+
+      sb.auth.updateUser({ password: p1.value }).then(function (r) {
+        btn.classList.remove('is-busy');
+        btn.textContent = 'Update password';
+        if (r.error) { pwMsg.innerHTML = alertHtml('error', humanError(r.error)); return; }
+        p1.value = ''; p2.value = '';
+        pwMsg.innerHTML = alertHtml('ok', 'Password updated');
+      });
+    });
+
+    function val(id) { return document.getElementById(id).value.trim() || null; }
+    function tile(label, value, pink) {
+      return '<div class="bsh-tile"><div class="bsh-tile__label">' + label + '</div>' +
+             '<div class="bsh-tile__value' + (pink ? ' bsh-tile__value--pink' : '') + '">' +
+             esc(value) + '</div></div>';
+    }
+  }
+
+  /* ===================================================================
+     ROUTING
+     Every screen lives at a hash on this one page, so signing in and
+     moving around never reloads and never leaves the block.
+     =================================================================== */
+  function pageUrl() {
+    return window.location.origin + window.location.pathname;
+  }
+
+  function go(hash) {
+    if (window.location.hash === hash) route();
+    else window.location.hash = hash;
+  }
+
+  function route() {
+    var h = (window.location.hash || '').replace(/^#/, '');
+
+    /* A hash left over from the recovery email is not a route */
+    if (h.indexOf('access_token') !== -1 || h.indexOf('error_description') !== -1) h = '';
+
+    if (!h || h === '/') h = S.session ? '/hub' : '/login';
+
+    if (h === '/login')  { if (S.session) return go('#/hub'); return screenLogin(); }
+    if (h === '/reset')  { return screenReset(); }
+
+    /* everything below is private */
+    if (!S.session) return go('#/login');
+
+    if (!S.loaded) {
+      booting();
+      return ensureData().then(route).catch(function (e) { fatal(humanError(e)); });
+    }
+
+    if (h === '/hub')     return screenHome();
+    if (h === '/profile') return screenProfile();
+
+    var mArt = /^\/kb\/a\/(.+)$/.exec(h);
+    if (mArt) return screenArticle(decodeURIComponent(mArt[1]));
+
+    var mCat = /^\/kb\/c\/(.+)$/.exec(h);
+    if (mCat) return screenKb(decodeURIComponent(mCat[1]));
+
+    if (h === '/kb') return screenKb(null);
+
+    return go('#/hub');
+  }
+
+  /* ===================================================================
+     START-UP
+     =================================================================== */
+  function loadLib(done) {
+    if (window.supabase && window.supabase.createClient) return done();
+    var tag = document.createElement('script');
+    tag.src = LIB_URL;
+    tag.onload = done;
+    tag.onerror = function () { fatal('The supabase-js library failed to load. Check the connection and any ad blockers.'); };
+    document.head.appendChild(tag);
+  }
+
+  function boot() {
+    if (CONFIG.url.indexOf('YOUR-PROJECT') !== -1 || CONFIG.anonKey.indexOf('YOUR-ANON-KEY') !== -1) {
+      fatal('The hub is not configured yet: fill in url and anonKey in CONFIG at the top of the block.');
+      return;
+    }
+
+    /* Note it before creating the client — supabase-js clears the hash */
+    S.recovery = (window.location.hash || '').indexOf('type=recovery') !== -1;
+
+    booting();
+
+    loadLib(function () {
+      sb = window.supabase.createClient(CONFIG.url, CONFIG.anonKey, {
+        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+      });
+
+      sb.auth.getSession().then(function (r) {
+        S.session = r.data.session;
+        window.addEventListener('hashchange', route);
+        if (S.session && S.recovery) return go('#/reset');
+        route();
+      }).catch(function (err) {
+        fatal(humanError(err));
+      });
+    });
+  }
+
+  boot();
+})();
+</script>

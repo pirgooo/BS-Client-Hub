@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Battle Start Hub — local preview</title>
+
+<!-- The Supabase stub must load BEFORE the block, so the block's own
+     loader finds window.supabase already present and skips the CDN. -->
+<script src="mock-supabase.js"></script>
+
+<style>
+  html, body { margin: 0; padding: 0; }
+  body { padding-bottom: 76px; background: #F6F7FB; }
+
+  /* Developer bar — it does not exist in Tilda, only on this preview */
+  #devbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 99998;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 12px 18px;
+    background: #1F2A5A; color: #fff;
+    font: 500 13px/1.4 'Manrope', -apple-system, Segoe UI, Roboto, sans-serif;
+    box-shadow: 0 -6px 24px rgba(31,42,90,.25);
+  }
+  #devbar b { font-weight: 800; letter-spacing: .04em; text-transform: uppercase; font-size: 11px; opacity: .7; margin-right: 4px; }
+  #devbar a, #devbar button {
+    display: inline-block; padding: 7px 14px; border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.22); background: transparent;
+    color: #fff; font: inherit; font-weight: 700; cursor: pointer; text-decoration: none;
+  }
+  #devbar a:hover, #devbar button:hover { background: rgba(255,255,255,.12); }
+  #devbar .creds { margin-left: auto; opacity: .75; font-weight: 600; }
+  #devbar code { background: rgba(255,255,255,.14); padding: 2px 7px; border-radius: 6px; }
+
+  #boot { padding: 60px 20px; text-align: center; color: #8A93A6; font-family: system-ui, sans-serif; }
+  #boot.err { color: #D01050; }
+</style>
+</head>
+
+<body>
+
+<div id="host"><div id="boot">Building the preview…</div></div>
+
+<div id="devbar">
+  <b>Preview</b>
+  <a href="#/login">Sign in</a>
+  <a href="#/hub">Hub</a>
+  <a href="#/kb">Knowledge base</a>
+  <a href="#/profile">Profile</a>
+  <a href="#/reset">Reset password</a>
+  <button type="button" id="dev-reset">Clear session</button>
+  <span class="creds">demo login: <code>demo@battlestart.com</code> / <code>demo1234</code></span>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  document.getElementById('dev-reset').addEventListener('click', function () {
+    window.BSH_PREVIEW.reset();
+    window.location.hash = '#/login';
+    window.location.reload();
+  });
+
+  var host = document.getElementById('host');
+
+  fetch('../tilda/battle-start-hub.html', { cache: 'no-store' })
+    .then(function (r) {
+      if (!r.ok) throw new Error('battle-start-hub.html → ' + r.status);
+      return r.text();
+    })
+    .then(function (html) {
+      /* The block refuses to start on placeholder credentials. The stub
+         ignores them entirely, so any non-placeholder value will do. */
+      html = html
+        .replace('https://YOUR-PROJECT.supabase.co', 'https://preview.local')
+        .replace('YOUR-ANON-KEY', 'preview-anon-key');
+
+      var doc = new DOMParser().parseFromString('<body>' + html + '</body>', 'text/html');
+
+      /* Styles go to the head; inline scripts have to be recreated to run */
+      var scripts = [];
+      Array.prototype.slice.call(doc.querySelectorAll('script')).forEach(function (s) {
+        if (!s.src) scripts.push(s.textContent);
+        s.parentNode.removeChild(s);
+      });
+      Array.prototype.slice.call(doc.querySelectorAll('style'))
+        .forEach(function (st) { document.head.appendChild(st.cloneNode(true)); });
+
+      host.innerHTML = '';
+      while (doc.body.firstChild) { host.appendChild(doc.body.firstChild); }
+
+      scripts.forEach(function (code) {
+        var el = document.createElement('script');
+        el.textContent = code;
+        document.body.appendChild(el);
+      });
+    })
+    .catch(function (err) {
+      host.innerHTML = '<div id="boot" class="err">Could not build the preview: ' + err.message +
+        '<br><br>Run this from the hub folder:<br><code>python3 -m http.server 8000</code>' +
+        '<br>then open <code>http://localhost:8000/preview/</code></div>';
+    });
+})();
+</script>
+
+</body>
+</html>
