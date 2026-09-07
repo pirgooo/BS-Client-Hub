@@ -340,7 +340,9 @@
   /* Mirrors the generated exp column: points for every filled field.
      Computed on read, never stored — same as in PostgreSQL. */
   function computeExp(profile) {
-    return db.exp_rules.reduce(function (sum, r) {
+    /* In PostgreSQL exp is a generated column and does not depend on the
+       rules table at all, so a missing exp_rules must not break it here. */
+    return (db.exp_rules || []).reduce(function (sum, r) {
       var v = (profile[r.field] == null ? '' : String(profile[r.field])).trim();
       return sum + (v.length >= (r.min_length || 1) ? r.points : 0);
     }, 0);
@@ -353,7 +355,7 @@
     var me = db.profiles.filter(function (r) { return r.id === s.user.id; })[0];
     if (!me) return 1;
     var exp = computeExp(me), lvl = 1;
-    db.levels.forEach(function (l) { if (exp >= l.min_exp && l.level > lvl) lvl = l.level; });
+    (db.levels || []).forEach(function (l) { if (exp >= l.min_exp && l.level > lvl) lvl = l.level; });
     return lvl;
   }
 
@@ -466,7 +468,7 @@
     if (this.table === 'kb_catalog') {
       /* The view: every published article, no body, with the flag saying
          whether this client may open it. */
-      rows = db.kb_articles.filter(function (a) { return a.is_published; }).map(function (a) {
+      rows = (db.kb_articles || []).filter(function (a) { return a.is_published; }).map(function (a) {
         return {
           id: a.id, slug: a.slug, title: a.title, summary: a.summary,
           category_id: a.category_id, reading_time: a.reading_time,
@@ -475,8 +477,15 @@
           unlocked: (a.min_level || 1) <= currentLevel()
         };
       });
+    } else if (!(this.table in db)) {
+      /* PostgREST answers this way for a table that was never created,
+         which is how a half-applied schema actually presents itself. */
+      return { data: null, error: {
+        code: 'PGRST205',
+        message: "Could not find the table 'public." + this.table + "' in the schema cache"
+      } };
     } else {
-      rows = (db[this.table] || []).slice();
+      rows = db[this.table].slice();
     }
 
     /* a client sees only their own profile — emulating RLS */

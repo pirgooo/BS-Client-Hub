@@ -88,7 +88,10 @@
         s.parentNode.removeChild(s);
       });
       Array.prototype.slice.call(doc.querySelectorAll('style'))
-        .forEach(function (st) { document.head.appendChild(st.cloneNode(true)); });
+        .forEach(function (st) {
+          document.head.appendChild(st.cloneNode(true));
+          st.parentNode.removeChild(st);      /* keep the copy in head only */
+        });
 
       host.innerHTML = '';
       while (doc.body.firstChild) { host.appendChild(doc.body.firstChild); }

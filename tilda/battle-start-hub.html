@@ -624,6 +624,7 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
     clients:  null,   /* every profile, administrators only */
     msTypes:  null,   /* the network-wide path         */
     msMine:   null,   /* milestones this arena reached */
+    missing:  [],     /* tables that are not there yet  */
     kbQuery:  '',     /* current search text           */
     recovery: false,  /* arrived from a recovery email */
     loaded:   false   /* profile + index fetched        */
@@ -790,19 +791,39 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
     return Promise.all([loadProfile(), loadIndex()]).then(function () { S.loaded = true; });
   }
 
+  /* A feature whose table has not been created yet should switch itself
+     off, not take the hub down with it. Experience and the journey are
+     additions; the knowledge base is not, so that one still throws. */
+  function optional(query, table) {
+    return query.then(function (r) {
+      if (r.error) {
+        S.missing.push(table);
+        console.warn('[BSH] ' + table + ' is unavailable, that feature is hidden:', r.error.message);
+        return { data: [] };
+      }
+      return r;
+    }, function (err) {
+      S.missing.push(table);
+      console.warn('[BSH] ' + table + ' is unavailable, that feature is hidden:', err && err.message);
+      return { data: [] };
+    });
+  }
+
   function loadIndex() {
     if (S.cats && S.arts && S.levels && S.rules && S.msTypes) return Promise.resolve();
+    S.missing = [];
     return Promise.all([
       sb.from('kb_categories').select('*').eq('is_published', true).order('sort_order', { ascending: true }),
       /* kb_catalog, not kb_articles: it lists locked material too, so it
          can be advertised, but it carries no article body. */
       sb.from('kb_catalog').select('*').order('sort_order', { ascending: true }),
-      sb.from('levels').select('*').order('min_exp', { ascending: true }),
-      sb.from('exp_rules').select('*').order('sort_order', { ascending: true }),
-      sb.from('milestone_types').select('*').order('sort_order', { ascending: true }),
-      sb.from('client_milestones').select('*').eq('profile_id', S.session.user.id)
+      optional(sb.from('levels').select('*').order('min_exp', { ascending: true }), 'levels'),
+      optional(sb.from('exp_rules').select('*').order('sort_order', { ascending: true }), 'exp_rules'),
+      optional(sb.from('milestone_types').select('*').order('sort_order', { ascending: true }), 'milestone_types'),
+      optional(sb.from('client_milestones').select('*').eq('profile_id', S.session.user.id), 'client_milestones')
     ]).then(function (res) {
-      for (var i = 0; i < res.length; i++) { if (res[i].error) throw res[i].error; }
+      if (res[0].error) throw res[0].error;
+      if (res[1].error) throw res[1].error;
       S.cats    = res[0].data || [];
       S.arts    = res[1].data || [];
       S.levels  = res[2].data || [];
@@ -890,7 +911,7 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
         }).join('') +
       '</div>' +
       '<div class="bsh-nav__side">' +
-        (S.levels ? '<a class="bsh-lvl" href="#/hub" title="Experience">LVL ' +
+        ((S.levels || []).length ? '<a class="bsh-lvl" href="#/hub" title="Experience">LVL ' +
                     levelInfo().level + ' · ' + levelInfo().exp + ' EXP</a>' : '') +
         '<div class="bsh-nav__user">' +
           '<div class="bsh-nav__avatar">' + esc(initials(p.full_name, email)) + '</div>' +
@@ -1236,6 +1257,7 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
   /* The progress card: where the client stands, and the smallest next
      step towards the thing they cannot read yet. */
   function xpCard() {
+    if (!(S.levels || []).length) return '';   /* schema not applied yet */
     var L     = levelInfo();
     var tasks = pendingTasks().slice(0, 5);
     var perk  = L.next && L.next.perk;
@@ -1293,12 +1315,23 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
     /* The journey only appears once the network has a path defined, so
        the rail is built from what is actually on the page. */
     var journeyHtml = journeyCard(S.msMine);
-    var rail = [{ id: 'bsh-s-progress', label: 'Your progress' }];
+    var xpHtml      = xpCard();
+
+    /* Only an administrator can act on this, so only they are told. */
+    var notice = (isAdmin() && S.missing.length)
+      ? '<div class="bsh-section">' + alertHtml('info',
+          'Not set up yet: ' + S.missing.join(', ') +
+          '. Run schema.sql again in the SQL editor — those features are hidden until you do.') +
+        '</div>'
+      : '';
+
+    var rail = [];
+    if (xpHtml) rail.push({ id: 'bsh-s-progress', label: 'Your progress' });
     if (journeyHtml) rail.push({ id: 'bsh-s-journey', label: 'Your journey' });
     rail.push({ id: 'bsh-s-links',  label: 'Sections' });
     rail.push({ id: 'bsh-s-latest', label: 'Latest material' });
 
-    paint(railMarkup(rail) +
+    paint((rail.length > 1 ? railMarkup(rail) : '') +
       header('hub') +
       '<div class="bsh-wrap">' +
         '<section class="bsh-hero">' +
@@ -1309,7 +1342,9 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
             'for launching and running your venue.</p>' +
         '</section>' +
 
-        xpCard() +
+        notice +
+
+        xpHtml +
 
         journeyHtml +
 
