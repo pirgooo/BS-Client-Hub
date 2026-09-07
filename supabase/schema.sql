@@ -211,8 +211,15 @@ returns trigger
 language plpgsql
 as $$
 begin
-  -- The server and an administrator may set these; a client may not.
-  if auth.role() = 'service_role' or public.is_admin() then
+  -- Who is allowed to set these fields:
+  --   * anything without a signed-in user — the Dashboard's table editor
+  --     and SQL editor connect directly, the service role carries no
+  --     subject, and both must keep working. Without this the very first
+  --     administrator could never be appointed: promoting someone would
+  --     require already being one.
+  --   * administrators.
+  -- Everyone else gets the old values put back.
+  if auth.uid() is null or public.is_admin() then
     return new;
   end if;
   new.id                 := old.id;
