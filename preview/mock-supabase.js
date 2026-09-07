@@ -279,6 +279,25 @@
       { field: 'logo_url',         points: 15, label: 'Logo',             hint: 'A link to your logo file',                     min_length: 1,  sort_order: 120 }
     ],
 
+    milestone_types: [
+      { slug: 'agreement',    title: 'Agreement signed',        description: 'You joined the network',                    icon: '🤝', sort_order: 10 },
+      { slug: 'venue',        title: 'Venue approved',          description: 'The space passed our requirements',         icon: '📍', sort_order: 20 },
+      { slug: 'installation', title: 'Hardware installed',      description: 'The arena was built and wired',             icon: '🔧', sort_order: 30 },
+      { slug: 'handover',     title: 'Handover passed',         description: 'Tracking calibrated, every set under load', icon: '✅', sort_order: 40 },
+      { slug: 'opening',      title: 'Opened to guests',        description: 'The first session ran',                     icon: '🎉', sort_order: 50 },
+      { slug: 'guests_1000',  title: 'First 1,000 guests',      description: 'A thousand people played at your arena',    icon: '👥', sort_order: 60 },
+      { slug: 'year_one',     title: 'One year in the network', description: 'Twelve months of operation',                icon: '🏆', sort_order: 70 }
+    ],
+
+    /* The demo arena is built and handed over but not open yet, so the
+       next stop on the path is the opening. */
+    client_milestones: [
+      { profile_id: 'demo-user-0001', milestone_slug: 'agreement',    reached_on: '2026-03-14', note: null },
+      { profile_id: 'demo-user-0001', milestone_slug: 'venue',        reached_on: '2026-04-02', note: null },
+      { profile_id: 'demo-user-0001', milestone_slug: 'installation', reached_on: '2026-05-20', note: null },
+      { profile_id: 'demo-user-0001', milestone_slug: 'handover',     reached_on: '2026-06-01', note: null }
+    ],
+
     kb_files: [
       { id: 'f1', article_id: 'a1', title: 'Opening checklist (PDF)', url: '#', kind: 'pdf', size_label: '480 KB', sort_order: 10 },
       { id: 'f2', article_id: 'a3', title: 'Logo pack (ZIP)',         url: '#', kind: 'zip', size_label: '12 MB',  sort_order: 10 },
@@ -368,9 +387,32 @@
   Query.prototype.maybeSingle = function () { this.mode = 'maybe'; return this; };
   Query.prototype.upsert = function (row) { this.writeRow = row; return this; };
   Query.prototype.update = function (row) { this.patchRow = row; return this; };
+  Query.prototype.delete = function () { this.isDelete = true; return this; };
+  Query.prototype.in = function (col, list) { this.inFilter = [col, list || []]; return this; };
+
+  /* Which columns identify a row, so upsert knows what to replace. */
+  var PRIMARY_KEY = {
+    profiles: ['id'],
+    client_milestones: ['profile_id', 'milestone_slug']
+  };
+
+  Query.prototype._matches = function (row) {
+    var ok = this.filters.every(function (f) { return row[f[0]] === f[1]; });
+    if (ok && this.inFilter) ok = this.inFilter[1].indexOf(row[this.inFilter[0]]) !== -1;
+    return ok;
+  };
 
   Query.prototype._exec = function () {
     var self = this;
+
+    /* --- delete matching rows --- */
+    if (this.isDelete) {
+      var table = db[this.table] || [];
+      for (var d = table.length - 1; d >= 0; d--) {
+        if (self._matches(table[d])) table.splice(d, 1);
+      }
+      return { data: null, error: null };
+    }
 
     /* --- update matching rows --- */
     if (this.patchRow) {
@@ -391,20 +433,29 @@
     /* --- write --- */
     if (this.writeRow) {
       var store = db[this.table] || [];
-      var found = null;
-      for (var i = 0; i < store.length; i++) {
-        if (store[i].id === this.writeRow.id) { found = store[i]; break; }
-      }
-      if (found) {
-        for (var k in this.writeRow) { found[k] = this.writeRow[k]; }
-        found.updated_at = new Date().toISOString();
-      } else {
-        found = JSON.parse(JSON.stringify(this.writeRow));
-        found.created_at = found.updated_at = new Date().toISOString();
-        store.push(found);
-      }
-      var out = JSON.parse(JSON.stringify(found));
-      if (this.table === 'profiles') out.exp = computeExp(found);
+      var keys  = PRIMARY_KEY[this.table] || ['id'];
+      var rows  = [].concat(this.writeRow);
+      var last  = null;
+
+      rows.forEach(function (row) {
+        var found = null;
+        for (var i = 0; i < store.length; i++) {
+          if (keys.every(function (k) { return store[i][k] === row[k]; })) { found = store[i]; break; }
+        }
+        if (found) {
+          for (var k in row) { found[k] = row[k]; }
+          found.updated_at = new Date().toISOString();
+        } else {
+          found = JSON.parse(JSON.stringify(row));
+          found.created_at = found.updated_at = new Date().toISOString();
+          store.push(found);
+        }
+        last = found;
+      });
+
+      if (!last) return { data: null, error: null };
+      var out = JSON.parse(JSON.stringify(last));
+      if (this.table === 'profiles') out.exp = computeExp(last);
       return { data: out, error: null };
     }
 
@@ -445,9 +496,18 @@
       rows = rows.filter(function (a) { return (a.min_level || 1) <= lvl; });
     }
 
+    /* a client sees only their own milestones */
+    if (this.table === 'client_milestones' && !callerIsAdmin()) {
+      var sess = readSession();
+      rows = rows.filter(function (r) { return sess && r.profile_id === sess.user.id; });
+    }
+
     this.filters.forEach(function (f) {
       rows = rows.filter(function (r) { return r[f[0]] === f[1]; });
     });
+    if (this.inFilter) {
+      rows = rows.filter(function (r) { return self.inFilter[1].indexOf(r[self.inFilter[0]]) !== -1; });
+    }
 
     if (this.orderCol) {
       rows.sort(function (a, b) {

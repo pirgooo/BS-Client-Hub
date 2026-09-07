@@ -344,6 +344,62 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
 @media (max-width: 960px) { .bsh-xp { grid-template-columns: minmax(0, 1fr); gap: 24px; } }
 
 /* ---------------------------------------------------------------------
+   THE JOURNEY. The arena's real history rather than a score, so the
+   track reads as a road: behind you it is solid, ahead it is faint, and
+   the next stop pulses.
+   --------------------------------------------------------------------- */
+.bsh-path__track {
+  display: flex; align-items: flex-start;
+  overflow-x: auto; padding-bottom: 8px; margin: 0 -6px;
+}
+.bsh-path__track::-webkit-scrollbar { height: 6px; }
+.bsh-path__track::-webkit-scrollbar-thumb { background: var(--bsh-line); border-radius: 999px; }
+
+.bsh-path__step { flex: 1 0 132px; position: relative; text-align: center; padding: 0 6px; }
+.bsh-path__step::before,
+.bsh-path__step::after {
+  content: ''; position: absolute; top: 20px; height: 3px; background: var(--bsh-line);
+}
+.bsh-path__step::before { left: 0; right: 50%; }
+.bsh-path__step::after  { left: 50%; right: 0; }
+.bsh-path__step:first-child::before,
+.bsh-path__step:last-child::after { display: none; }
+.bsh-path__step.is-done::before,
+.bsh-path__step.is-done::after,
+.bsh-path__step.is-next::before { background: var(--bsh-pink); }
+
+.bsh-path__dot {
+  position: relative; z-index: 1;
+  width: 42px; height: 42px; margin: 0 auto 12px;
+  border-radius: 50%; border: 4px solid #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; background: var(--bsh-soft);
+}
+.bsh-path__step.is-done .bsh-path__dot { background: var(--bsh-pink); }
+.bsh-path__step.is-next .bsh-path__dot {
+  background: #fff; box-shadow: 0 0 0 3px var(--bsh-pink);
+  animation: bsh-pulse 2.2s ease-in-out infinite;
+}
+@keyframes bsh-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px var(--bsh-pink); }
+  50%      { box-shadow: 0 0 0 8px rgba(236, 30, 94, .16); }
+}
+.bsh-path__step.is-future { opacity: .45; }
+
+.bsh-path__title { font-size: 13px; font-weight: 700; line-height: 1.3; }
+.bsh-path__date  { font-size: 12px; color: var(--bsh-muted); margin-top: 4px; }
+.bsh-path__next {
+  margin-top: 24px; padding: 16px 18px;
+  border-radius: var(--bsh-radius-sm); background: var(--bsh-pink-soft);
+}
+.bsh-path__next b {
+  display: block; font-size: 11px; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--bsh-pink); margin-bottom: 6px;
+}
+.bsh-path__next span { font-size: 15px; font-weight: 700; color: var(--bsh-navy); }
+.bsh-path__next em { display: block; font-style: normal; font-size: 13px; color: var(--bsh-muted); margin-top: 3px; }
+
+/* ---------------------------------------------------------------------
    ADMINISTRATION. Every value here is typed in by hand — the plan is
    whatever was actually agreed, not an entry from a list.
    --------------------------------------------------------------------- */
@@ -510,6 +566,8 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
     levels:   null,   /* level thresholds and perks    */
     rules:    null,   /* what earns experience         */
     clients:  null,   /* every profile, administrators only */
+    msTypes:  null,   /* the network-wide path         */
+    msMine:   null,   /* milestones this arena reached */
     kbQuery:  '',     /* current search text           */
     recovery: false,  /* arrived from a recovery email */
     loaded:   false   /* profile + index fetched        */
@@ -677,20 +735,24 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
   }
 
   function loadIndex() {
-    if (S.cats && S.arts && S.levels && S.rules) return Promise.resolve();
+    if (S.cats && S.arts && S.levels && S.rules && S.msTypes) return Promise.resolve();
     return Promise.all([
       sb.from('kb_categories').select('*').eq('is_published', true).order('sort_order', { ascending: true }),
       /* kb_catalog, not kb_articles: it lists locked material too, so it
          can be advertised, but it carries no article body. */
       sb.from('kb_catalog').select('*').order('sort_order', { ascending: true }),
       sb.from('levels').select('*').order('min_exp', { ascending: true }),
-      sb.from('exp_rules').select('*').order('sort_order', { ascending: true })
+      sb.from('exp_rules').select('*').order('sort_order', { ascending: true }),
+      sb.from('milestone_types').select('*').order('sort_order', { ascending: true }),
+      sb.from('client_milestones').select('*').eq('profile_id', S.session.user.id)
     ]).then(function (res) {
       for (var i = 0; i < res.length; i++) { if (res[i].error) throw res[i].error; }
-      S.cats   = res[0].data || [];
-      S.arts   = res[1].data || [];
-      S.levels = res[2].data || [];
-      S.rules  = res[3].data || [];
+      S.cats    = res[0].data || [];
+      S.arts    = res[1].data || [];
+      S.levels  = res[2].data || [];
+      S.rules   = res[3].data || [];
+      S.msTypes = res[4].data || [];
+      S.msMine  = res[5].data || [];
     });
   }
 
@@ -1015,6 +1077,52 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
     return row ? row.min_exp : 0;
   }
 
+  /* The journey: milestones behind, the next one ahead. Reached dates are
+     supplied by an administrator — Battle Start confirming each step is
+     what gives the path its weight. */
+  function journeyCard(reached, types) {
+    types = types || S.msTypes || [];
+    if (!types.length) return '';
+
+    var byslug = {};
+    (reached || []).forEach(function (m) { byslug[m.milestone_slug] = m; });
+
+    var nextIdx = -1;
+    for (var i = 0; i < types.length; i++) {
+      if (!byslug[types[i].slug]) { nextIdx = i; break; }
+    }
+
+    var steps = types.map(function (t, i) {
+      var got = byslug[t.slug];
+      var cls = got ? 'is-done' : (i === nextIdx ? 'is-next' : 'is-future');
+      return '<div class="bsh-path__step ' + cls + '">' +
+        '<div class="bsh-path__dot">' + (got ? '✓' : esc(t.icon || '')) + '</div>' +
+        '<div class="bsh-path__title">' + esc(t.title) + '</div>' +
+        '<div class="bsh-path__date">' + (got ? esc(fmtDay(got.reached_on)) : '—') + '</div>' +
+      '</div>';
+    }).join('');
+
+    var next = nextIdx >= 0 ? types[nextIdx] : null;
+    var done = Object.keys(byslug).length;
+
+    return '<section class="bsh-section">' +
+      '<h2 class="bsh-h2"><span class="bsh-accent">Your</span> journey</h2>' +
+      '<p class="bsh-lead" style="margin-bottom:20px">' +
+        (done
+          ? done + ' of ' + types.length + ' milestones behind you.'
+          : 'Your manager marks each milestone as you pass it.') +
+      '</p>' +
+      '<div class="bsh-card">' +
+        '<div class="bsh-path__track">' + steps + '</div>' +
+        (next
+          ? '<div class="bsh-path__next"><b>Next</b><span>' + esc(next.title) + '</span>' +
+            (next.description ? '<em>' + esc(next.description) + '</em>' : '') + '</div>'
+          : '<div class="bsh-path__next"><b>Complete</b><span>' +
+            'You have walked the whole path. Not many arenas get here.</span></div>') +
+      '</div>' +
+    '</section>';
+  }
+
   /* The progress card: where the client stands, and the smallest next
      step towards the thing they cannot read yet. */
   function xpCard() {
@@ -1083,6 +1191,8 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
         '</section>' +
 
         xpCard() +
+
+        journeyCard(S.msMine) +
 
         '<section class="bsh-section"><div class="bsh-cards">' +
           '<a class="bsh-shortcut" href="#/kb">' +
@@ -1686,7 +1796,15 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
   function screenAdminEdit(id, flash) {
     if (!isAdmin()) return go('#/hub');
 
-    return loadClients().then(function () {
+    return Promise.all([
+      loadClients(),
+      sb.from('client_milestones').select('*').eq('profile_id', id)
+    ]).then(function (res) {
+      if (res[1] && res[1].error) throw res[1].error;
+      var ms = (res[1] && res[1].data) || [];
+      var msBySlug = {};
+      ms.forEach(function (m) { msBySlug[m.milestone_slug] = m; });
+
       var c = (S.clients || []).filter(function (x) { return x.id === id; })[0];
       if (!c) {
         paint(header('admin') + '<div class="bsh-wrap bsh-adm">' +
@@ -1751,6 +1869,15 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
               '</div>' +
               af('bsh-a-tgch', 'Telegram channel', c.social_telegram, '@arena_channel') +
 
+              group('Journey', 'A date marks the milestone as reached. Clear it to undo.') +
+              (S.msTypes || []).map(function (t) {
+                var got = msBySlug[t.slug];
+                return af('bsh-a-ms-' + t.slug,
+                          (t.icon ? t.icon + ' ' : '') + t.title,
+                          got ? got.reached_on : '',
+                          '2026-03-01');
+              }).join('') +
+
               group('Access') +
               '<div class="bsh-profile__row">' +
                 af('bsh-a-role', 'Role', c.role, 'client', 'client, staff or admin') +
@@ -1786,6 +1913,17 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
           return;
         }
 
+        var badMilestone = null;
+        (S.msTypes || []).forEach(function (t) {
+          var el = document.getElementById('bsh-a-ms-' + t.slug);
+          if (el && parseDate(el.value) === false) badMilestone = t.title;
+        });
+        if (badMilestone) {
+          msg.innerHTML = alertHtml('error',
+            'The date for "' + badMilestone + '" must look like 2026-03-01 or 01.03.2026');
+          return;
+        }
+
         btn.classList.add('is-busy');
         btn.innerHTML = '<span class="bsh-spinner"></span>Saving…';
 
@@ -1811,18 +1949,47 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
           status:             v('bsh-a-status')  || 'active'
         };
 
-        sb.from('profiles').update(patch).eq('id', id).select().maybeSingle().then(function (r) {
-          btn.classList.remove('is-busy');
-          btn.textContent = 'Save changes';
-          if (r.error) { msg.innerHTML = alertHtml('error', humanError(r.error)); return; }
-
-          /* Refresh the cached list, and the admin's own profile if they
-             just edited themselves. */
-          if (id === S.session.user.id) S.profile = r.data;
-          loadClients(true).then(function () {
+        sb.from('profiles').update(patch).eq('id', id).select().maybeSingle()
+          .then(function (r) {
+            if (r.error) throw r.error;
+            /* Refresh the admin's own profile too if they edited themselves. */
+            if (id === S.session.user.id) S.profile = r.data;
+            return saveJourney();
+          })
+          .then(function () { return loadClients(true); })
+          .then(function () {
             screenAdminEdit(id, alertHtml('ok', 'Saved'));
+          })
+          .catch(function (err) {
+            btn.classList.remove('is-busy');
+            btn.textContent = 'Save changes';
+            msg.innerHTML = alertHtml('error', humanError(err));
           });
-        });
+
+        /* A filled date means the milestone is behind them; an empty one
+           means it is not, so the row goes away. */
+        function saveJourney() {
+          var reached = [], cleared = [];
+          (S.msTypes || []).forEach(function (t) {
+            var el = document.getElementById('bsh-a-ms-' + t.slug);
+            if (!el) return;
+            var d = parseDate(el.value);
+            if (d) reached.push({ profile_id: id, milestone_slug: t.slug, reached_on: d });
+            else cleared.push(t.slug);
+          });
+
+          var jobs = [];
+          if (reached.length) {
+            jobs.push(sb.from('client_milestones').upsert(reached).then(check));
+          }
+          if (cleared.length) {
+            jobs.push(sb.from('client_milestones').delete()
+              .eq('profile_id', id).in('milestone_slug', cleared).then(check));
+          }
+          return Promise.all(jobs);
+
+          function check(r) { if (r.error) throw r.error; }
+        }
 
         function v(elId) { return document.getElementById(elId).value.trim(); }
       });

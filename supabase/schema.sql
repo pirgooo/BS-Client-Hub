@@ -366,6 +366,56 @@ as $$
 $$;
 
 -- =====================================================================
+-- 7c. THE ARENA'S JOURNEY
+--     Not a score — the venue's real history, from signing to a year in
+--     the network. An administrator records each milestone by hand, the
+--     client sees the road behind them and the next stop ahead.
+--
+--     It holds its meaning in a way points cannot: these are facts about
+--     their own business, so there is nothing to inflate or devalue.
+-- =====================================================================
+
+-- The path every arena walks. Same for the whole network.
+create table if not exists public.milestone_types (
+  slug        text primary key,
+  title       text not null,
+  description text,
+  icon        text,
+  sort_order  integer not null default 100
+);
+
+insert into public.milestone_types (slug, title, description, icon, sort_order) values
+  ('agreement',    'Agreement signed',    'You joined the network',                        '🤝', 10),
+  ('venue',        'Venue approved',      'The space passed our requirements',             '📍', 20),
+  ('installation', 'Hardware installed',  'The arena was built and wired',                 '🔧', 30),
+  ('handover',     'Handover passed',     'Tracking calibrated, every set under load',     '✅', 40),
+  ('opening',      'Opened to guests',    'The first session ran',                         '🎉', 50),
+  ('guests_1000',  'First 1,000 guests',  'A thousand people played at your arena',        '👥', 60),
+  ('year_one',     'One year in the network', 'Twelve months of operation',                '🏆', 70)
+on conflict (slug) do update
+  set title       = excluded.title,
+      description = excluded.description,
+      icon        = excluded.icon,
+      sort_order  = excluded.sort_order;
+
+-- Which milestones a given arena has reached, and when.
+-- A row exists only once the milestone is behind them.
+create table if not exists public.client_milestones (
+  profile_id     uuid not null references public.profiles (id) on delete cascade,
+  milestone_slug text not null references public.milestone_types (slug) on delete cascade,
+  reached_on     date not null,
+  note           text,
+  created_at     timestamptz not null default now(),
+  primary key (profile_id, milestone_slug)
+);
+
+create index if not exists client_milestones_profile_idx
+  on public.client_milestones (profile_id);
+
+comment on table public.client_milestones is
+  'Milestones an arena has reached. Written by administrators only.';
+
+-- =====================================================================
 -- 8. ROW LEVEL SECURITY
 --    Everything is closed by default. An anonymous visitor sees nothing —
 --    that is what protects the content, not the redirect on the Tilda page.
@@ -376,6 +426,8 @@ alter table public.kb_articles   enable row level security;
 alter table public.kb_files      enable row level security;
 alter table public.levels        enable row level security;
 alter table public.exp_rules     enable row level security;
+alter table public.milestone_types   enable row level security;
+alter table public.client_milestones enable row level security;
 
 -- --- profiles: own row only ---
 drop policy if exists "profiles: read own"   on public.profiles;
@@ -434,6 +486,25 @@ create policy "levels: read" on public.levels
 drop policy if exists "exp_rules: read" on public.exp_rules;
 create policy "exp_rules: read" on public.exp_rules
   for select to authenticated using (true);
+
+-- --- the journey ---
+drop policy if exists "milestone_types: read" on public.milestone_types;
+create policy "milestone_types: read" on public.milestone_types
+  for select to authenticated using (true);
+
+-- A client sees their own history; an administrator sees and writes all.
+-- A client cannot mark their own milestones: the point of the path is
+-- that Battle Start confirms each step.
+drop policy if exists "client_milestones: read" on public.client_milestones;
+create policy "client_milestones: read" on public.client_milestones
+  for select to authenticated
+  using (profile_id = auth.uid() or public.is_admin());
+
+drop policy if exists "client_milestones: admin writes" on public.client_milestones;
+create policy "client_milestones: admin writes" on public.client_milestones
+  for all to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
 
 -- There are deliberately no INSERT/UPDATE/DELETE policies for the
 -- knowledge base, levels or scoring rules: they are edited from the

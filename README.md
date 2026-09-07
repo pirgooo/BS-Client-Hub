@@ -203,6 +203,31 @@ the Clients list ready to edit.
 
 ---
 
+## The arena's journey
+
+Beside the experience bar the home screen carries a second, quieter track: the
+venue's real history, from signing the agreement to a year in the network.
+
+It is deliberately **not** a score. The milestones are facts about the client's
+own business, so there is nothing to inflate and nothing that goes stale once
+the profile is full. An owner with "First 1,000 guests" ahead of them actually
+wants to reach it.
+
+Milestones are marked by an **administrator**, never by the client — Battle
+Start confirming each step is what gives the path its weight. Open a client in
+the Clients tab and the Journey section has one date box per milestone: fill it
+in and the step goes solid, clear it and the step goes back to pending. Dates
+are typed by hand and accept `2026-03-01` or `01.03.2026`.
+
+The path itself lives in `public.milestone_types` — edit that table to rename,
+reorder or add stops for the whole network. A client's own history is in
+`public.client_milestones`, one row per milestone reached.
+
+It also gives the network a plain operational view: who has been stuck on
+installation for three months.
+
+---
+
 ## Experience and levels
 
 The hub rewards a client for describing their arena properly: every filled field
