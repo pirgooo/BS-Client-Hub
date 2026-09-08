@@ -611,7 +611,12 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
     /* The hub paints the whole page its own background, so the builder's
        white does not show around the block. Set to false to leave the
        page colour alone. */
-    paintPage: true
+    paintPage: true,
+
+    /* Pixels of air above the header. The builder usually adds padding of
+       its own on top of this, so the hub clears that padding and keeps
+       exactly this gap. Set to null to leave the builder's spacing alone. */
+    topGap: 14
   };
 
   var LIB_URL = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';
@@ -904,8 +909,8 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
 
   function fitHost() {
     /* wait for layout, then again once fonts and images have settled */
-    requestAnimationFrame(function () { applyFit(); paintPage(); });
-    setTimeout(function () { applyFit(); paintPage(); }, 450);
+    requestAnimationFrame(function () { applyTopGap(); applyFit(); paintPage(); });
+    setTimeout(function () { applyTopGap(); applyFit(); paintPage(); }, 450);
   }
 
   /* The block only covers its own column; the page around it stays the
@@ -917,6 +922,26 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
     if (!bg || bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent') return;
     document.documentElement.style.background = bg;
     document.body.style.background = bg;
+  }
+
+  /* The block is handed whatever padding the page builder felt like
+     adding — often a hundred pixels — which pushes the header down the
+     screen for no reason. The hub clears that padding on its own
+     wrappers and keeps the gap it actually wants. */
+  function applyTopGap() {
+    if (CONFIG.topGap == null || !app) return;
+
+    var el = app.parentNode, hops = 0;
+    while (el && el.nodeType === 1 && el !== document.body && hops++ < 12) {
+      var cls = typeof el.className === 'string' ? el.className : '';
+      if (HOST_CLASS.test(cls) || (el.style && el.style.paddingTop)) {
+        if (parseFloat(window.getComputedStyle(el).paddingTop) > 0) el.style.paddingTop = '0px';
+      }
+      el = el.parentNode;
+    }
+
+    var nav = app.querySelector('.bsh-nav');
+    if (nav) nav.style.marginTop = CONFIG.topGap + 'px';
   }
 
   function applyFit() {

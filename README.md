@@ -1,9 +1,10 @@
-# Battle Start - Client Hub
+# Battle Start — client hub
 
 An invitation-only information hub for Battle Start clients: a knowledge base and
 a client profile, built as **one Tilda block driven by Supabase**.
 
-Reference - light ground, floating white pill header, generous rounding, crimson `#EC1E5E`
+Visual language follows the [avatararena.ru](https://avatararena.ru/) reference —
+light ground, floating white pill header, generous rounding, crimson `#EC1E5E`
 accent against deep navy `#1F2A5A` text.
 
 ---
@@ -116,6 +117,17 @@ The block covers only its own column, so the builder's white would otherwise
 show as a band down each side. It therefore paints the page itself, taking the
 colour from its own palette so the two can never drift apart. Set
 `paintPage: false` in CONFIG to leave the page colour alone.
+
+### Space above the header
+
+A page builder adds padding of its own around a block — often a hundred
+pixels — which pushes the hub's header down the screen for no reason. The block
+clears that padding on its own wrappers and keeps exactly the gap named by
+`topGap` in CONFIG (14px by default). Set it to `null` to leave the builder's
+spacing alone.
+
+If you keep the site's own header, raise `.bsh-nav`'s `top` to its height as
+well, or the two will overlap once the page scrolls.
 
 ### Block height
 
