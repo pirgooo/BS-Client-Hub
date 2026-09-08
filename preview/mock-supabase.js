@@ -11,12 +11,17 @@
   var DEMO_PASS   = 'demo1234';
   var ADMIN_EMAIL = 'admin@battlestart.com';
   var ADMIN_PASS  = 'admin1234';
+  var TRIAL_EMAIL = 'trial@battlestart.com';
+  var TRIAL_PASS  = 'trial1234';
   var KEY         = 'bsh-preview-session';
 
   /* Accounts the stub will let in. The Edge Function stub adds to this. */
   var ACCOUNTS = {};
   ACCOUNTS[DEMO_EMAIL]  = { password: DEMO_PASS,  id: 'demo-user-0001' };
   ACCOUNTS[ADMIN_EMAIL] = { password: ADMIN_PASS, id: 'demo-admin-0001' };
+  /* A signed-up venue that has not bought a subscription yet, so the
+     paywalled part of the library can be seen in its closed state. */
+  ACCOUNTS[TRIAL_EMAIL] = { password: TRIAL_PASS, id: 'demo-trial-0001' };
 
   /* ------------------------- data ------------------------- */
   var db = {
@@ -68,12 +73,33 @@
       status: 'active',
       created_at: '2026-01-10T09:00:00Z',
       updated_at: '2026-01-10T09:00:00Z'
+    }, {
+      id: 'demo-trial-0001',
+      email: TRIAL_EMAIL,
+      full_name: 'Marek Novak',
+      company: 'Battle Start Prague',
+      city: 'Prague',
+      phone: '+420 222 000 111',
+      telegram: '@bs_marek',
+      avatar_url: null,
+      address: 'Narodni 12, Prague', website: 'https://battlestart.cz',
+      social_facebook: null, social_instagram: null, social_telegram: null,
+      about: null, logo_url: null,
+      manager_name: 'Anna Kovaleva',
+      manager_contact: '@bs_anna · +44 20 7946 0000',
+      manager_whatsapp: '447700900123',
+      /* No subscription: the Marketing section stays shut. */
+      plan: null, subscription_from: null, subscription_until: null,
+      role: 'client',
+      status: 'active',
+      created_at: '2026-08-20T09:00:00Z',
+      updated_at: '2026-08-20T09:00:00Z'
     }],
 
     kb_categories: [
       { id: 'c1', slug: 'launch',     title: 'Launching a venue', description: 'Everything to do before opening: the space, hardware, installation, handover.', icon: '🚀', accent: 'pink', sort_order: 10, is_published: true },
       { id: 'c2', slug: 'operations', title: 'Operations',        description: 'Running the arena day to day: shifts, tills, procedures, guest service.',      icon: '⚙️', accent: 'blue', sort_order: 20, is_published: true },
-      { id: 'c3', slug: 'marketing',  title: 'Marketing',         description: 'Artwork, social media, promotions and ready-made campaign assets.',            icon: '📣', accent: 'pink', sort_order: 30, is_published: true },
+      { id: 'c3', slug: 'marketing',  title: 'Marketing',         description: 'Artwork, social media, promotions and ready-made campaign assets.',            icon: '📣', accent: 'pink', sort_order: 30, is_published: true, requires_subscription: true },
       { id: 'c4', slug: 'software',   title: 'Software & kit',    description: 'Updates, headset setup and troubleshooting.',                                  icon: '🖥', accent: 'navy', sort_order: 40, is_published: true },
       { id: 'c5', slug: 'documents',  title: 'Documents',         description: 'Contracts, templates, policies and legal paperwork.',                          icon: '📄', accent: 'blue', sort_order: 50, is_published: true }
     ],
@@ -349,6 +375,35 @@
   }
 
   /* Mirrors public.current_level() */
+  /* public.has_subscription(): a live, paid-up client. */
+  function hasSubscription() {
+    var s = readSession();
+    if (!s) return false;
+    var me = db.profiles.filter(function (r) { return r.id === s.user.id; })[0];
+    if (!me || me.status !== 'active' || !me.subscription_until) return false;
+    return new Date(me.subscription_until + 'T23:59:59') >= new Date();
+  }
+
+  /* Why this article is closed, in the view's own vocabulary. */
+  /* Published, and inside a category that is itself published. */
+  function visibleArticle(a) {
+    if (!a.is_published) return false;
+    var c = catOf(a);
+    return !a.category_id || (c && c.is_published);
+  }
+
+  function catOf(a) {
+    return (db.kb_categories || []).filter(function (c) { return c.id === a.category_id; })[0] || null;
+  }
+
+  function lockReason(a) {
+    if (callerIsAdmin()) return null;
+    var cat = catOf(a);
+    if (cat && cat.requires_subscription && !hasSubscription()) return 'subscription';
+    if ((a.min_level || 1) > currentLevel()) return 'level';
+    return null;
+  }
+
   function currentLevel() {
     var s = readSession();
     if (!s) return 1;
@@ -468,13 +523,15 @@
     if (this.table === 'kb_catalog') {
       /* The view: every published article, no body, with the flag saying
          whether this client may open it. */
-      rows = (db.kb_articles || []).filter(function (a) { return a.is_published; }).map(function (a) {
+      rows = (db.kb_articles || []).filter(visibleArticle).map(function (a) {
         return {
           id: a.id, slug: a.slug, title: a.title, summary: a.summary,
           category_id: a.category_id, reading_time: a.reading_time,
           min_level: a.min_level || 1, sort_order: a.sort_order,
           created_at: a.created_at,
-          unlocked: (a.min_level || 1) <= currentLevel()
+          requires_subscription: !!(catOf(a) && catOf(a).requires_subscription),
+          lock_reason: lockReason(a),
+          unlocked: lockReason(a) === null
         };
       });
     } else if (!(this.table in db)) {
@@ -502,8 +559,9 @@
 
     /* the level gate on article bodies, as the RLS policy does it */
     if (this.table === 'kb_articles') {
-      var lvl = currentLevel();
-      rows = rows.filter(function (a) { return (a.min_level || 1) <= lvl; });
+      rows = rows.filter(function (a) {
+        return visibleArticle(a) && (callerIsAdmin() || lockReason(a) === null);
+      });
     }
 
     /* a client sees only their own milestones */
@@ -648,6 +706,7 @@
   window.BSH_PREVIEW = {
     email: DEMO_EMAIL, password: DEMO_PASS,
     adminEmail: ADMIN_EMAIL, adminPassword: ADMIN_PASS,
+    trialEmail: TRIAL_EMAIL, trialPassword: TRIAL_PASS,
     db: db,
     reset: function () { writeSession(null); }
   };

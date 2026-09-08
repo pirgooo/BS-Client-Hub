@@ -197,6 +197,44 @@
 .bsh-tab:hover { border-color: #C9D0E4; }
 .bsh-tab.is-active { background: var(--bsh-pink); border-color: var(--bsh-pink); color: #fff; }
 
+/* A category kept behind the paywall: still listed, visibly closed. */
+.bsh-tab--locked { background: #F4F6FB; color: var(--bsh-muted); border-style: dashed; }
+.bsh-tab--locked:hover { border-color: var(--bsh-pink); }
+.bsh-tab--locked.is-active { background: var(--bsh-navy); border-color: var(--bsh-navy); color: #fff; }
+
+/* ---------------------------------------------------------------------
+   TOOLTIP
+   A hover note that explains why something is closed. Pure CSS, because
+   the block has to survive inside a page builder that reorders scripts.
+   --------------------------------------------------------------------- */
+.bsh-tip { position: relative; }
+.bsh-tip::after {
+  content: attr(data-tip);
+  position: absolute; left: 50%; bottom: calc(100% + 11px);
+  transform: translateX(-50%) translateY(5px);
+  width: max-content; max-width: 240px;
+  padding: 9px 13px; border-radius: 10px;
+  background: var(--bsh-navy); color: #fff;
+  font-size: 12.5px; font-weight: 600; line-height: 1.35;
+  text-align: center; white-space: normal;
+  box-shadow: 0 8px 22px rgba(31, 42, 90, .22);
+  opacity: 0; pointer-events: none;
+  transition: opacity .16s ease, transform .16s ease;
+  z-index: 40;
+}
+.bsh-tip::before {
+  content: ''; position: absolute; left: 50%; bottom: calc(100% + 5px);
+  transform: translateX(-50%) translateY(5px);
+  border: 6px solid transparent; border-top-color: var(--bsh-navy);
+  opacity: 0; pointer-events: none;
+  transition: opacity .16s ease, transform .16s ease;
+  z-index: 40;
+}
+.bsh-tip:hover::after, .bsh-tip:focus-visible::after,
+.bsh-tip:hover::before, .bsh-tip:focus-visible::before {
+  opacity: 1; transform: translateX(-50%) translateY(0);
+}
+
 /* ---------------------------------------------------------------------
    FORMS
    --------------------------------------------------------------------- */
@@ -1235,6 +1273,43 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
     return '<span class="bsh-badge bsh-badge--' + cls + '">' + esc(i.label) + '</span>';
   }
 
+  /* Mirrors public.has_subscription() in the database, so the interface
+     closes exactly what the API refuses to hand over. The database stays
+     the authority; this only decides what the reader is told. */
+  function hasSubscription() {
+    var p = S.profile;
+    if (!p || p.status !== 'active') return false;
+    var i = subInfo(p);
+    return i.kind === 'active' || i.kind === 'soon';
+  }
+
+  /* A category kept behind the paywall, from this reader's point of view. */
+  function catLocked(c) {
+    return !!(c && c.requires_subscription) && !hasSubscription() && !isAdmin();
+  }
+
+  /* One vocabulary for every lock, so a card, a list row and the article
+     page never disagree about why a piece is closed. The view hands us
+     lock_reason; the fallback keeps older databases sane. */
+  function lockNote(a) {
+    var bySub = a.lock_reason === 'subscription' ||
+                (!a.lock_reason && a.requires_subscription && !hasSubscription());
+    if (bySub) {
+      return {
+        sub:   true,
+        badge: '&#128274; Subscription',
+        line:  'Opens with a subscription &rarr;',
+        tip:   'Opens once you buy a subscription'
+      };
+    }
+    return {
+      sub:   false,
+      badge: '&#128274; Level ' + a.min_level,
+      line:  'Unlocks at level ' + a.min_level + ' &rarr;',
+      tip:   'Opens at level ' + a.min_level
+    };
+  }
+
   /* Experience needed to reach a given level. */
   function expForLevel(n) {
     var row = (S.levels || []).filter(function (l) { return l.level === n; })[0];
@@ -1468,7 +1543,8 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
                       (a.summary ? '<span class="bsh-recent__sum">' + esc(a.summary) + '</span>' : '') +
                     '</span>' +
                     (locked
-                      ? '<span class="bsh-badge bsh-badge--pink">🔒 Level ' + a.min_level + '</span>'
+                      ? '<span class="bsh-badge bsh-badge--pink bsh-tip" data-tip="' +
+                        esc(lockNote(a).tip) + '">' + lockNote(a).badge + '</span>'
                       : '') +
                     '<span class="bsh-recent__arrow">→</span></a>';
                 }).join('')
@@ -1498,27 +1574,31 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
 
     var tabs = '<button class="bsh-tab' + (!active ? ' is-active' : '') + '" data-cat="">Everything</button>' +
       (S.cats || []).map(function (c) {
+        var shut = catLocked(c);
         return '<button class="bsh-tab' + (active && active.id === c.id ? ' is-active' : '') +
-               '" data-cat="' + esc(c.slug) + '">' +
-               (c.icon ? esc(c.icon) + ' ' : '') + esc(c.title) + '</button>';
+               (shut ? ' bsh-tab--locked bsh-tip' : '') + '" data-cat="' + esc(c.slug) + '"' +
+               (shut ? ' data-tip="Opens once you buy a subscription"' : '') + '>' +
+               (shut ? '🔒 ' : (c.icon ? esc(c.icon) + ' ' : '')) + esc(c.title) + '</button>';
       }).join('');
 
     var cards = list.map(function (a) {
       var c      = catById(a.category_id);
       var locked = a.unlocked === false;
+      var note   = locked ? lockNote(a) : null;
 
       return '<a class="bsh-art' + (locked ? ' bsh-art--locked' : '') +
                '" href="#/kb/a/' + esc(a.slug) + '">' +
         '<div class="bsh-art__top">' +
           (c ? '<span class="bsh-badge">' + esc(c.title) + '</span>' : '') +
           (locked
-            ? '<span class="bsh-badge bsh-badge--pink">🔒 Level ' + a.min_level + '</span>'
+            ? '<span class="bsh-badge bsh-badge--pink bsh-tip" data-tip="' + esc(note.tip) + '">' +
+              note.badge + '</span>'
             : (a.reading_time ? '<span class="bsh-label">' + a.reading_time + ' min</span>' : '')) +
         '</div>' +
         '<div class="bsh-art__title">' + esc(a.title) + '</div>' +
         (a.summary ? '<div class="bsh-art__sum">' + esc(a.summary) + '</div>' : '') +
         (locked
-          ? '<div class="bsh-art__lock">Unlocks at level ' + a.min_level + ' →</div>'
+          ? '<div class="bsh-art__lock">' + note.line + '</div>'
           : '<div class="bsh-art__more">Read →</div>') +
       '</a>';
     }).join('');
@@ -1647,8 +1727,13 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
     bindLogout();
   }
 
-  /* The locked article: visible as a promise, unreadable until earned. */
+  /* The locked article: visible as a promise, unreadable until earned.
+     Two kinds of lock, two things to say. Experience is something the
+     reader can go and earn right now, so that screen points at the
+     profile; a subscription is a conversation with a manager, so that
+     screen puts the manager in front of them instead. */
   function lockedScreen(row) {
+    if (lockNote(row).sub) return lockedBySubscription(row);
     var L      = levelInfo();
     var needed = expForLevel(row.min_level);
     var short  = Math.max(0, needed - L.exp);
@@ -1675,6 +1760,46 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
             '</div>' +
             '<a class="bsh-btn bsh-btn--accent" href="#/profile" style="margin-top:26px">' +
               'Fill in your arena details</a>' +
+          '</div>' +
+        '</div>' +
+      '</div>');
+    bindLogout();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* Closed because the venue has no live subscription. Nothing here is
+     earnable by clicking, so the screen names the material, says plainly
+     what opens it, and hands over the manager. */
+  function lockedBySubscription(row) {
+    var p   = S.profile || {};
+    var i   = subInfo(p);
+    var cat = catById(row.category_id);
+
+    paint(header('kb') +
+      '<div class="bsh-wrap bsh-kb">' +
+        '<a class="bsh-back" href="#/kb">← All articles</a>' +
+        '<div class="bsh-card" style="max-width:720px;margin:0 auto">' +
+          '<div class="bsh-locked">' +
+            '<div class="bsh-locked__icon">🔒</div>' +
+            (cat ? '<span class="bsh-badge">' + esc(cat.title) + '</span>' : '') +
+            '<h1 class="bsh-h2" style="margin-top:12px">' + esc(row.title) + '</h1>' +
+            (row.summary
+              ? '<p class="bsh-lead bsh-muted" style="max-width:540px;margin:12px auto 0">' +
+                esc(row.summary) + '</p>'
+              : '') +
+            '<p class="bsh-lead" style="margin-top:26px">' +
+              'Opens once you buy a <span class="bsh-accent">subscription</span>.' +
+            '</p>' +
+            '<p class="bsh-muted" style="margin-top:8px">' +
+              (i.kind === 'expired'
+                ? 'Your subscription ran out on ' + esc(fmtDay(p.subscription_until)) +
+                  '. Renew it and this section opens again.'
+                : 'Your manager can set one up for you.') +
+            '</p>' +
+            '<div class="bsh-card bsh-card--flat" style="margin-top:24px;text-align:left">' +
+              '<div class="bsh-label" style="margin-bottom:8px">Your manager</div>' +
+              managerBlock(p) +
+            '</div>' +
           '</div>' +
         '</div>' +
       '</div>');

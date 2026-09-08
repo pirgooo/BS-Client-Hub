@@ -92,12 +92,19 @@ create table if not exists public.kb_categories (
   description  text,
   icon         text,                            -- emoji or icon name
   accent       text default 'pink',             -- pink | blue | navy — tile colour
+  requires_subscription boolean not null default false,  -- paid material
   sort_order   integer not null default 100,
   is_published boolean not null default true,
   created_at   timestamptz not null default now()
 );
 
 comment on table public.kb_categories is 'Knowledge base categories';
+
+alter table public.kb_categories
+  add column if not exists requires_subscription boolean not null default false;
+
+-- Marketing is paid material: it opens once the client has a subscription.
+update public.kb_categories set requires_subscription = true where slug = 'marketing';
 
 -- ---------------------------------------------------------------------
 -- 3. KNOWLEDGE BASE: ARTICLES
@@ -350,6 +357,25 @@ as $$
   );
 $$;
 
+-- Is the caller's subscription paid up today? SECURITY DEFINER for the
+-- same reason as is_admin: it is read from inside a policy on another
+-- table. A missing or past subscription_until counts as no subscription.
+create or replace function public.has_subscription()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.profiles p
+    where p.id = auth.uid()
+      and p.status = 'active'
+      and p.subscription_until is not null
+      and p.subscription_until >= current_date
+  );
+$$;
+
 create or replace function public.current_level()
 returns integer
 language sql
@@ -462,7 +488,29 @@ create policy "kb_articles: read published" on public.kb_articles
   for select to authenticated
   using (
     is_published
-    and (min_level <= public.current_level() or public.is_admin())
+    /* an unpublished category hides everything inside it */
+    and (
+      category_id is null
+      or exists (
+        select 1 from public.kb_categories c
+        where c.id = kb_articles.category_id and c.is_published
+      )
+    )
+    and (
+      public.is_admin()
+      or (
+        /* the experience gate */
+        min_level <= public.current_level()
+        /* and the subscription gate, for categories marked as paid */
+        and (
+          not exists (
+            select 1 from public.kb_categories c
+            where c.id = kb_articles.category_id and c.requires_subscription
+          )
+          or public.has_subscription()
+        )
+      )
+    )
     and exists (
       select 1 from public.profiles p
       where p.id = auth.uid() and p.status = 'active'
@@ -522,8 +570,15 @@ create policy "client_milestones: admin writes" on public.client_milestones
 --     default for a view), so it sees past the kb_articles policy, and it
 --     simply never selects content_md. Locked rows can be advertised;
 --     their contents cannot leak.
+--
+--     Dropped rather than replaced: CREATE OR REPLACE VIEW cannot add a
+--     column in the middle of the list, and this one has grown over time.
+--     Nothing depends on the view, so dropping it costs nothing and makes
+--     the script safe to re-run after any change to its columns.
 -- =====================================================================
-create or replace view public.kb_catalog as
+drop view if exists public.kb_catalog;
+
+create view public.kb_catalog as
   select
     a.id,
     a.slug,
@@ -534,9 +589,33 @@ create or replace view public.kb_catalog as
     a.min_level,
     a.sort_order,
     a.created_at,
-    (a.min_level <= public.current_level()) as unlocked
+    coalesce(c.requires_subscription, false) as requires_subscription,
+    (
+      public.is_admin()
+      or (
+        a.min_level <= public.current_level()
+        and (not coalesce(c.requires_subscription, false) or public.has_subscription())
+      )
+    ) as unlocked,
+    /* Why it is shut, so the interface can say the right thing. The two
+       gates are independent, and the paywall is named first: a client
+       with the levels but no subscription should be told to renew, not
+       sent off to earn experience they already have. Admins see the
+       library as it is, with nothing shut. */
+    case
+      when public.is_admin() then null
+      when coalesce(c.requires_subscription, false) and not public.has_subscription()
+        then 'subscription'
+      when a.min_level > public.current_level()
+        then 'level'
+      else null
+    end as lock_reason
   from public.kb_articles a
-  where a.is_published;
+  left join public.kb_categories c on c.id = a.category_id
+  /* Taking a category down takes its articles with it, so hiding a tab
+     really hides a section rather than scattering it into "Everything". */
+  where a.is_published
+    and (a.category_id is null or c.is_published);
 
 -- The view bypasses RLS, so access is granted explicitly instead.
 -- Anonymous visitors must not see even the titles.

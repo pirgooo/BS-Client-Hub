@@ -159,25 +159,6 @@ hash. The block spots it on start-up and opens the "New password" screen.
 
 ---
 
-## Step 5 — Images and files on GitHub
-
-Put files in `hub/assets/` in this repository and reference them through jsDelivr:
-
-```
-https://cdn.jsdelivr.net/gh/pirgooo/pirgooo@main/hub/assets/files/opening-checklist.pdf
-```
-
-Use that URL in `kb_files.url` (attachments) or `kb_articles.cover_url` (covers).
-
-jsDelivr caches aggressively. To publish a changed file, either give it a new
-name or pin a commit hash instead of `@main`.
-
-**Know the trade-off:** a file in a public repository is readable by anyone with
-the link. Keep genuinely confidential documents in **Supabase Storage** with a
-private bucket and signed links instead.
-
----
-
 ## Administration
 
 An administrator manages client accounts from inside the hub: a **Clients**
@@ -199,6 +180,9 @@ Dashboard, so an account in the hub can never promote itself.
 - **Record a subscription**: plan and the dates it is paid from and until.
   The plan is free text — whatever was actually agreed, not an item from a
   list. Dates accept `2026-03-01` or `01.03.2026` and are normalised on save.
+  This is also what opens the paywalled part of the library: a client with
+  `status = active` and a `subscription_until` that has not passed gets the
+  **Marketing** section, and loses it again the day after it lapses.
 - **Suspend access**: set `status` to `suspended` and RLS stops serving that
   client the knowledge base, without deleting anything.
 
@@ -320,6 +304,12 @@ Set `kb_articles.min_level` in the Table Editor. `1` means open to everyone
 signed in; anything higher locks it, and the catalogue starts advertising it as
 a reward.
 
+That is the experience lock. There is a second, independent one — the paywall on
+a whole category, set by `kb_categories.requires_subscription` — described under
+[Categories](#categories). An article can be behind both; the reader is told
+about the subscription first, since experience they have already earned is not
+the thing standing in their way.
+
 ### Changing the numbers
 
 Thresholds, titles and perks are ordinary rows — edit `levels` and `exp_rules`
@@ -339,18 +329,216 @@ interface shows the same number the database awards.
 
 ---
 
-## Step 6 — Managing content
+## Step 5 — Running the knowledge base
 
-Everything is edited from **Table Editor** — no redeploy, no Tilda changes.
+Everything below is edited in the Supabase dashboard, under **Table Editor**.
+Nothing here needs a redeploy and nothing needs Tilda: the block reads the
+database on every load, so a saved row is live for clients on their next
+refresh.
 
-- **kb_categories** — the tab row. `sort_order` sets the order, `icon` takes an emoji.
-- **kb_articles** — the articles. `content_md` is Markdown; `slug` is what the URL
-  uses, so keep it stable once shared. Set `is_published` to `false` to hide a draft.
-- **kb_files** — attachments, linked to an article by `article_id`.
+Three tables hold the library:
 
-Markdown supported by the renderer: headings, ordered and unordered lists,
-tables, blockquotes, inline code, links, images, bold, italic, horizontal rules.
-Raw HTML is escaped rather than rendered, so an article cannot inject markup.
+| Table | What it is |
+|---|---|
+| `kb_categories` | the row of tabs across the top of the Knowledge base |
+| `kb_articles` | the articles themselves, body included |
+| `kb_files` | attachments, each one belonging to an article |
+
+### Writing a new article
+
+**Table Editor → `kb_articles` → Insert → Insert row.** Fill in:
+
+| Column | What to put in it |
+|---|---|
+| `category_id` | pick the category — the editor offers a row picker, so you never type a UUID |
+| `slug` | the address of the article: `opening-checklist` |
+| `title` | the headline, as the reader sees it |
+| `summary` | one or two sentences; this is the grey line on the card and in search |
+| `content_md` | the body, in Markdown (see below) |
+| `reading_time` | minutes, a whole number — shown on the card; leave empty to hide it |
+| `cover_url` | optional image, see *Attaching files* |
+| `min_level` | `1` is open to everyone signed in; higher locks it behind experience |
+| `sort_order` | smaller comes first; `10, 20, 30…` leaves room to insert later |
+| `is_published` | `false` while you are still writing — drafts are invisible to clients |
+
+Leave `id`, `created_at` and `updated_at` alone: the database fills them, and
+`updated_at` maintains itself on every save.
+
+**About the slug.** It is what stands in the address bar — `#/kb/a/opening-checklist`
+— so once you have sent that link to anyone, changing it breaks their link.
+Lowercase Latin letters, digits and hyphens; no spaces, no punctuation, no
+Cyrillic. Keep it short and descriptive: `arena-insurance`, not
+`article-17-final-v2`.
+
+### Editing an existing article
+
+Click the row, edit the cell, save. Long bodies are easier to handle by clicking
+the cell and using **Expand** — the editor opens a full-height text area.
+
+Two habits worth keeping:
+
+- **Do not change the slug** of anything already published.
+- **Take a draft down rather than deleting it.** `is_published = false` hides an
+  article from clients instantly and keeps the text, the attachments and the
+  history. Deleting a row also deletes its `kb_files` rows, and that cannot be
+  undone.
+
+### Removing an article
+
+Set `is_published` to `false`. Genuinely delete a row only when it was created
+by mistake.
+
+### Categories
+
+`kb_categories` is the tab row. `title` is what a client reads, `slug` is what
+the address uses, `icon` takes a single emoji, `description` becomes the line
+under the "Knowledge base" heading when that tab is open, and `sort_order` sets
+the order of the tabs. `is_published = false` removes a tab and everything in it
+from view.
+
+`requires_subscription` is the paywall. With it set to `true` — as it is on
+**Marketing** — the tab shows a padlock and a hover note reading *"Opens once
+you buy a subscription"*, the article cards say *"Opens with a subscription"*,
+and the article itself opens a screen that names the material, explains what
+opens it and hands over the client's manager with a WhatsApp button. The bodies
+of those articles are never sent to the browser at all — a client without a
+subscription can see that the material exists, and nothing more. Administrators
+see the section as normal.
+
+A client counts as subscribed when `profiles.status` is `active` **and**
+`subscription_until` is today or later. Both are set by an administrator on the
+**Clients** screen in the hub.
+
+### Markdown the renderer understands
+
+```
+## Heading            (start at ##; the article's own title is the `title` column)
+**bold**  *italic*  `inline code`
+- bullet
+1. numbered
+> a quotation
+[link text](https://example.com)
+![image caption](https://cdn.jsdelivr.net/gh/pirgooo/pirgooo@main/hub/assets/covers/x.jpg)
+| Column | Column |    a table needs the |---|---| line under the header
+|---|---|
+| cell | cell |
+---                   (a horizontal rule)
+```
+
+There is no fenced code block and no nesting of lists inside lists. Raw HTML is
+escaped rather than rendered, on purpose: an article cannot inject markup into
+the page, so nothing typed into `content_md` can break the hub for everyone
+else. Wide tables scroll inside their own frame instead of stretching the page.
+
+---
+
+## Step 6 — Attaching files
+
+Every downloadable thing — a contract template, an artwork pack, a manual —
+lives as a file in this repository and as a row in `kb_files` pointing at it.
+The repository stores the bytes; the database stores what the client sees.
+
+### Where the files go
+
+```
+hub/assets/
+├── covers/     article cover images   → kb_articles.cover_url
+└── files/      PDFs, ZIPs, documents  → kb_files.url
+```
+
+Put nothing else in `assets/`. If a category grows large, give it a subfolder —
+`assets/files/legal/`, `assets/files/marketing/` — rather than letting a hundred
+files sit flat.
+
+### Naming
+
+Lowercase Latin letters, digits and hyphens. No spaces, no Cyrillic, no
+brackets — a space becomes `%20` in a URL and Cyrillic breaks on some clients
+outright.
+
+```
+✓  franchise-agreement-2026.pdf
+✓  opening-checklist.pdf
+✓  brand-pack-summer-2026.zip
+✓  covers/opening-checklist.jpg
+✗  Договор франшизы (финал).pdf
+✗  doc1.pdf
+✗  Final FINAL v3.pdf
+```
+
+Two rules that save trouble later:
+
+- **Name it after the content, not the version.** `franchise-agreement-2026.pdf`
+  survives a revision; `agreement-v3-final.pdf` does not.
+- **Put the year in the name of anything dated** — contracts, price lists,
+  brand packs — so an old link stays honestly old instead of quietly changing
+  meaning.
+
+### Getting the link
+
+Files are served from GitHub through the jsDelivr CDN. The address is the
+repository path with a fixed prefix:
+
+```
+https://cdn.jsdelivr.net/gh/pirgooo/pirgooo@main/hub/assets/files/<file name>
+```
+
+So `hub/assets/files/franchise-agreement-2026.pdf` becomes
+
+```
+https://cdn.jsdelivr.net/gh/pirgooo/pirgooo@main/hub/assets/files/franchise-agreement-2026.pdf
+```
+
+**jsDelivr caches hard — for up to a week.** Uploading a new file under an old
+name will not reach clients who have already loaded it. To publish a changed
+file, either give it a new name (`...-2026-09.pdf`), or replace `@main` in the
+link with the commit hash of the upload:
+
+```
+https://cdn.jsdelivr.net/gh/pirgooo/pirgooo@a1b2c3d/hub/assets/files/...
+```
+
+A new name is simpler and leaves the old version reachable for anyone who still
+needs it.
+
+### Registering the attachment
+
+**Table Editor → `kb_files` → Insert row:**
+
+| Column | What to put in it |
+|---|---|
+| `article_id` | the article this file belongs to — use the row picker |
+| `title` | what the client reads on the button: *"Franchise agreement (2026)"* |
+| `url` | the jsDelivr link |
+| `kind` | `pdf`, `zip`, `image`, `video`, `link` or `file` — it only picks the icon |
+| `size_label` | display only: `"2.4 MB"`. Type it by hand or leave it empty |
+| `sort_order` | order within the article; `10, 20, 30…` |
+
+The database refuses to attach the same URL to the same article twice, so a
+duplicated insert fails loudly instead of showing the client two identical
+buttons.
+
+Deleting an article deletes its attachment rows with it — the file itself stays
+in the repository, so nothing is lost, but no article points at it any more.
+
+### Cover images
+
+`kb_articles.cover_url` takes the same kind of jsDelivr link, pointing into
+`assets/covers/`. Landscape, roughly 1200×630, JPEG or PNG, and keep it under a
+few hundred kilobytes: it loads on the card, not on click.
+
+### What must never go in this repository
+
+**The repository is public. Anything in `assets/` can be downloaded by anyone
+with the link, signed in or not.** The knowledge base's own locks — `min_level`
+and `requires_subscription` — protect the *article*, never the file behind a
+public link.
+
+Signed contracts, personal data, price lists you would not publish, anything a
+competitor should not read: put those in a **private Supabase Storage bucket**
+and hand out signed URLs, or send them to the client directly. Use `assets/` for
+material you would be comfortable seeing on the open web — templates, manuals,
+brand packs, covers.
 
 ---
 
@@ -424,7 +612,9 @@ hub/
 │   └── mock-supabase.js        Supabase stub, preview only
 ├── local/
 │   └── index.html              local stand, live database
-└── assets/                     images and files served via jsDelivr
+└── assets/
+    ├── covers/                 article cover images
+    └── files/                  downloadable attachments (public!)
 ```
 
 ---

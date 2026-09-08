@@ -66,6 +66,18 @@ with c as (
   union all select 20, 'Rows: kb_files',      (select count(*)::text from public.kb_files),      'any'
   union all select 21, 'Rows: locked articles (min_level > 1)',
          (select count(*)::text from public.kb_articles where min_level > 1), 'any'
+
+  -- The paywall: the gate function must exist and Marketing must be behind it.
+  union all select 22, 'Function: has_subscription()',
+         (select count(*)::text from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+           where n.nspname = 'public' and p.proname = 'has_subscription'), '1'
+  union all select 23, 'Marketing requires a subscription',
+         (select coalesce(max(requires_subscription::text), 'no such category')
+            from public.kb_categories where slug = 'marketing'), 'true'
+  union all select 24, 'View reports why an article is shut',
+         (select count(*)::text from information_schema.columns
+           where table_schema='public' and table_name='kb_catalog'
+             and column_name in ('requires_subscription','lock_reason')), '2'
 )
 select
   check_name,
