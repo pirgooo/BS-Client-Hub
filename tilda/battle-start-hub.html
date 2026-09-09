@@ -637,29 +637,6 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
 .bsh-road__sub { font-size: 13px; color: var(--bsh-muted); line-height: 1.4; margin-top: 2px; }
 .bsh-road__step.is-next .bsh-road__title { color: var(--bsh-pink); }
 
-/* --- latest material: filters and a search that stays out of the way --- */
-.bsh-feed__head {
-  display: flex; align-items: center; gap: 10px;
-  margin-bottom: 6px; padding-bottom: 16px;
-}
-.bsh-feed__chips {
-  display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;
-  overflow-x: auto; scrollbar-width: none; padding: 2px 0;
-}
-.bsh-feed__chips::-webkit-scrollbar { display: none; }
-.bsh-chip {
-  flex: none; padding: 9px 16px; border-radius: var(--bsh-pill);
-  background: #fff; border: 1px solid var(--bsh-line);
-  color: var(--bsh-navy); font-family: var(--bsh-font);
-  font-size: 14px; font-weight: 700; white-space: nowrap;
-  cursor: pointer; transition: all .18s ease;
-}
-.bsh-chip:hover { border-color: #C9D0E4; }
-.bsh-chip.is-active { background: var(--bsh-navy); border-color: var(--bsh-navy); color: #fff; }
-.bsh-chip--locked { color: var(--bsh-muted); border-style: dashed; }
-.bsh-feed__find { flex: none; }
-.bsh-feed__box { display: none; margin-bottom: 16px; }
-.bsh-feed__box.is-open { display: block; }
 
 /* Hover belongs to a mouse. On a touch screen the state sticks after a
    tap, so a card stays lifted and a row stays pink until something else
@@ -744,8 +721,6 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
   .bsh-road__step { grid-template-columns: 40px minmax(0, 1fr); gap: 12px; }
   .bsh-road__dot { width: 40px; height: 40px; }
   .bsh-road__step::before { left: 19px; top: 36px; }
-  .bsh-chip { min-height: 44px; padding: 11px 15px; }
-  .bsh-feed__head { margin: 0 -18px 6px; padding: 0 18px 14px; }
   .bsh-nav__link { padding: 11px 12px; min-height: 44px; display: flex; align-items: center; }
 
   /* --- controls a thumb has to hit --- */
@@ -1811,115 +1786,47 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
         notice +
         '<section class="bsh-section bsh-recent" id="bsh-s-latest">' +
           '<h2 class="bsh-h2"><span class="bsh-accent">Latest</span> material</h2>' +
-          '<div class="bsh-card" style="margin-top:18px">' + feedInner() + '</div>' +
+          '<div class="bsh-card" style="margin-top:18px">' + feedRows() + '</div>' +
         '</section>' +
       '</div>');
 
     bindLogout();
-    wireFeed();
     wireRail();
   }
 
   /* The feed is redrawn on its own as the filter and the search change,
      so the rest of the page — and the page's scroll position — stays put. */
-  function feedInner() {
-    var q    = (S.feedQuery || '').toLowerCase();
-    var cat  = S.feedCat || '';
-    var list = (S.arts || []).filter(function (a) {
-      var c = catById(a.category_id);
-      if (cat && (!c || c.slug !== cat)) return false;
-      if (q && (a.title + ' ' + (a.summary || '')).toLowerCase().indexOf(q) === -1) return false;
-      return true;
-    }).sort(function (a, b) {
+  /* The newest handful, and nothing to operate. Filtering and search
+     belong to the knowledge base, which is one tap away and does both
+     properly; a second set of the same controls here only asked the
+     reader which of the two to use. */
+  function feedRows() {
+    var list = (S.arts || []).slice().sort(function (a, b) {
       return (b.created_at || '') > (a.created_at || '') ? 1 : -1;
     }).slice(0, 6);
 
-    var chips = '<button class="bsh-chip' + (!cat ? ' is-active' : '') + '" data-feed="">All</button>' +
-      (S.cats || []).map(function (c) {
-        var shut = catLocked(c);
-        return '<button class="bsh-chip' + (cat === c.slug ? ' is-active' : '') +
-               (shut ? ' bsh-chip--locked bsh-tip' : '') + '" data-feed="' + esc(c.slug) + '"' +
-               (shut ? ' data-tip="Opens once you buy a subscription"' : '') + '>' +
-               (shut ? '🔒 ' : '') + esc(c.title) + '</button>';
-      }).join('');
+    if (!list.length) {
+      return '<div class="bsh-empty"><div class="bsh-empty__icon">📭</div>' +
+             'Nothing published yet</div>';
+    }
 
-    return '<div class="bsh-feed__head">' +
-        '<div class="bsh-feed__chips">' + chips + '</div>' +
-        '<button class="bsh-iconbtn bsh-feed__find" type="button" id="bsh-feed-find" ' +
-          'title="Search" aria-label="Search the knowledge base">' + LENS + '</button>' +
-      '</div>' +
-      '<div class="bsh-feed__box' + (S.feedOpen ? ' is-open' : '') + '">' +
-        '<input class="bsh-input" id="bsh-feed-q" type="search" ' +
-          'placeholder="Search the knowledge base" value="' + esc(S.feedQuery || '') + '">' +
-      '</div>' +
-      (list.length
-        ? list.map(function (a) {
-            var c      = catById(a.category_id);
-            var locked = a.unlocked === false;
-            return '<a class="bsh-recent__row" href="#/kb/a/' + esc(a.slug) + '">' +
-              (c ? '<span class="bsh-badge">' + esc(c.title) + '</span>' : '') +
-              '<span class="bsh-recent__body">' +
-                '<span class="bsh-recent__title">' + esc(a.title) + '</span>' +
-                (a.summary ? '<span class="bsh-recent__sum">' + esc(a.summary) + '</span>' : '') +
-              '</span>' +
-              (locked
-                ? '<span class="bsh-badge bsh-badge--pink bsh-tip" data-tip="' +
-                  esc(lockNote(a).tip) + '">' + lockNote(a).badge + '</span>'
-                : '') +
-              '<span class="bsh-recent__arrow">→</span></a>';
-          }).join('')
-        : '<div class="bsh-empty"><div class="bsh-empty__icon">' +
-          (S.feedQuery || S.feedCat ? '🔍' : '📭') + '</div>' +
-          (S.feedQuery || S.feedCat ? 'Nothing here matches' : 'Nothing published yet') + '</div>');
+    return list.map(function (a) {
+      var c      = catById(a.category_id);
+      var locked = a.unlocked === false;
+      return '<a class="bsh-recent__row" href="#/kb/a/' + esc(a.slug) + '">' +
+        (c ? '<span class="bsh-badge">' + esc(c.title) + '</span>' : '') +
+        '<span class="bsh-recent__body">' +
+          '<span class="bsh-recent__title">' + esc(a.title) + '</span>' +
+          (a.summary ? '<span class="bsh-recent__sum">' + esc(a.summary) + '</span>' : '') +
+        '</span>' +
+        (locked
+          ? '<span class="bsh-badge bsh-badge--pink bsh-tip" data-tip="' +
+            esc(lockNote(a).tip) + '">' + lockNote(a).badge + '</span>'
+          : '') +
+        '<span class="bsh-recent__arrow">→</span></a>';
+    }).join('');
   }
 
-  function wireFeed() {
-    var card = document.querySelector('.bsh-recent .bsh-card');
-    if (!card) return;
-
-    card.querySelectorAll('.bsh-chip').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        S.feedCat = btn.getAttribute('data-feed');
-        card.innerHTML = feedInner();
-        wireFeed();
-        fitHost();
-      });
-    });
-
-    var find = document.getElementById('bsh-feed-find');
-    var box  = card.querySelector('.bsh-feed__box');
-    var q    = document.getElementById('bsh-feed-q');
-
-    find.addEventListener('click', function () {
-      S.feedOpen = !S.feedOpen;
-      box.classList.toggle('is-open', S.feedOpen);
-      if (S.feedOpen) { q.focus(); }
-      else if (S.feedQuery) {
-        S.feedQuery = '';
-        card.innerHTML = feedInner();
-        wireFeed();
-      }
-      fitHost();
-    });
-
-    q.addEventListener('input', function () {
-      S.feedQuery = q.value;
-      var pos = q.selectionStart;
-      card.innerHTML = feedInner();
-      wireFeed();
-      var again = document.getElementById('bsh-feed-q');
-      again.focus();
-      again.setSelectionRange(pos, pos);
-      fitHost();
-    });
-
-    revealActive(card.querySelector('.bsh-feed__chips'), '.bsh-chip.is-active');
-  }
-
-  var LENS =
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
-    'stroke-linecap="round" aria-hidden="true">' +
-    '<circle cx="10.8" cy="10.8" r="6.8"/><path d="M15.8 15.8 21 21"/></svg>';
 
   /* ===================================================================
      SCREEN: KNOWLEDGE BASE LIST

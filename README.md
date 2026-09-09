@@ -259,8 +259,10 @@ in — and on the right the arena's journey, read as a column.
   and the name of the rank they are climbing to.
 - **Earn experience** lists what is still unfilled and what each field is worth,
   ending with the reward waiting at the next level.
-- **Latest material** below carries the category filters and a search that opens
-  from the magnifier, so a client can find something without leaving the page.
+- **Latest material** below is the six newest articles and nothing else. There
+  are no filters and no search on it on purpose: the knowledge base is one tap
+  away and does both properly, and a second set of the same controls only asked
+  the reader which of the two to use.
 
 The header is one row: the wordmark and the sections on the left, then the
 client's own pill — a laurel emblem carrying their level, their name and venue,
