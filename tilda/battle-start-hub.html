@@ -413,7 +413,10 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
    ADMINISTRATION. Every value here is typed in by hand — the plan is
    whatever was actually agreed, not an entry from a list.
    --------------------------------------------------------------------- */
-.bsh-adm { padding: 44px 0 72px; }
+/* Set only the vertical padding: these classes are put on .bsh-wrap
+   itself, and a shorthand here would drop the side padding that keeps
+   the page in line with the header. */
+.bsh-adm { padding-top: 44px; padding-bottom: 72px; }
 .bsh-adm__bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 24px; }
 .bsh-adm__search { flex: 1; min-width: 220px; max-width: 360px; }
 .bsh-adm__row {
@@ -449,7 +452,7 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
 /* ---------------------------------------------------------------------
    KNOWLEDGE BASE
    --------------------------------------------------------------------- */
-.bsh-kb { padding: 44px 0 72px; }
+.bsh-kb { padding-top: 44px; padding-bottom: 72px; }
 .bsh-kb__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
 .bsh-art {
   display: flex; flex-direction: column; gap: 10px;
@@ -503,7 +506,7 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
 /* ---------------------------------------------------------------------
    PROFILE
    --------------------------------------------------------------------- */
-.bsh-profile { padding: 44px 0 72px; }
+.bsh-profile { padding-top: 44px; padding-bottom: 72px; }
 .bsh-profile__cols { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 20px; align-items: start; }
 .bsh-profile__row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .bsh-profile__head { display: flex; align-items: center; gap: 16px; margin-bottom: 26px; }
@@ -558,27 +561,34 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
   font-size: 12px; font-weight: 800; white-space: nowrap;
 }
 
-.bsh-iconbtn {
-  flex: none; width: 38px; height: 38px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--bsh-muted); background: none; border: none;
-  cursor: pointer; transition: background .18s ease, color .18s ease;
-}
-.bsh-iconbtn:hover { background: var(--bsh-soft); color: var(--bsh-navy); }
-.bsh-iconbtn svg { width: 19px; height: 19px; display: block; }
 
 /* ---------------------------------------------------------------------
    HOME: a dashboard rather than a stack. The two things a client acts
    on — where they stand and what is next — sit side by side, with the
    journey beside them as the longer story.
    --------------------------------------------------------------------- */
-.bsh-home { display: grid; grid-template-columns: minmax(0, 1.92fr) minmax(0, 1fr); gap: 26px; padding-top: 8px; }
-.bsh-home { padding-bottom: 14px; }
+/* Headings on one row, cards on the next: laid out as a grid rather than
+   as two independent columns, so a two-line heading on one side cannot
+   push its cards below the other side's, and every card in the row ends
+   on the same line. */
+.bsh-home {
+  display: grid;
+  grid-template-columns: minmax(0, 1.92fr) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas: "headmain headaside" "duo aside";
+  column-gap: 26px; row-gap: 0;
+  padding: 8px 0 14px;
+}
 .bsh-home + .bsh-recent, .bsh-home + .bsh-section { padding-top: 14px; margin-top: 0; }
-.bsh-home__col { display: flex; flex-direction: column; }
-.bsh-home__head { margin-bottom: 22px; }
-.bsh-duo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.06fr); gap: 22px; flex: 1; }
+.bsh-home__head { grid-area: headmain; margin-bottom: 22px; }
+.bsh-home__head--aside { grid-area: headaside; }
+.bsh-duo {
+  grid-area: duo;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.06fr); gap: 22px;
+}
 .bsh-duo > * { min-width: 0; }
+.bsh-home__aside { grid-area: aside; display: flex; }
+.bsh-home__aside > .bsh-card { flex: 1; }
 
 /* --- the rank card, built around a ring --- */
 .bsh-rank { display: flex; flex-direction: column; }
@@ -674,8 +684,12 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
 /* The dashboard needs real width for three cards abreast. Below that the
    journey drops under the pair, and below that again the pair unstacks. */
 @media (max-width: 1120px) {
-  .bsh-home { grid-template-columns: minmax(0, 1fr); gap: 8px; }
-  .bsh-home__col + .bsh-home__col .bsh-home__head { margin-top: 26px; }
+  .bsh-home {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto;
+    grid-template-areas: "headmain" "duo" "headaside" "aside";
+  }
+  .bsh-home__head--aside { margin-top: 30px; }
 }
 @media (max-width: 960px) {
   .bsh-profile__cols { grid-template-columns: minmax(0, 1fr); }
@@ -697,7 +711,7 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
   .bsh-card { padding: 20px 18px; border-radius: var(--bsh-radius-md); }
   .bsh-kb__grid, .bsh-profile__row { grid-template-columns: minmax(0, 1fr); }
   .bsh-hero { padding-top: 22px; }
-  .bsh-kb, .bsh-profile { padding: 24px 0 44px; }
+  .bsh-kb, .bsh-profile, .bsh-adm { padding-top: 24px; padding-bottom: 44px; }
   .bsh-lead { font-size: 16px; }
 
   .bsh-nav__logo { width: 96px; height: 20px; margin-right: 0; }
@@ -709,7 +723,6 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
   .bsh-me__avatar { width: 24px; height: 24px; font-size: 10.5px; top: 4px; }
   .bsh-me__lvl { font-size: 7.5px; padding: 1px 5px; }
   .bsh-me__exp { padding: 5px 9px; font-size: 11.5px; }
-  .bsh-iconbtn { width: 40px; height: 40px; }
   .bsh-nav__side { gap: 6px; }
 
   /* the dashboard, one card at a time */
@@ -1226,18 +1239,11 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
           '</span>' +
           (ranked ? '<span class="bsh-me__exp">' + L.exp + ' EXP</span>' : '') +
         '</a>' +
-        '<a class="bsh-iconbtn" href="#/profile" title="Settings" aria-label="Settings">' + GEAR + '</a>' +
         '<button class="bsh-btn bsh-btn--ghost bsh-btn--sm" id="bsh-logout" type="button">Sign out</button>' +
       '</div>' +
     '</nav></div>';
   }
 
-  var GEAR =
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" ' +
-    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-    '<circle cx="12" cy="12" r="3.1"/>' +
-    '<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>' +
-    '</svg>';
 
   /* A laurel wreath around the avatar: the rank emblem. Drawn rather than
      drawn-on, so it takes the colour of whatever it sits in and costs the
@@ -1752,25 +1758,21 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
        own heading, so the two read as separate stories side by side. */
     var top = (rankHtml || tasksHtml || journeyHtml)
       ? '<section class="bsh-section bsh-home" id="bsh-s-progress">' +
-          '<div class="bsh-home__col">' +
-            '<div class="bsh-home__head">' +
-              '<h1 class="bsh-h1"><span class="bsh-accent">Hello</span>' +
-                (first ? ', ' + esc(first) : '') + '</h1>' +
-              '<p class="bsh-lead" style="max-width:560px">' + lead + '</p>' +
-            '</div>' +
-            (rankHtml || tasksHtml
-              ? '<div class="bsh-duo">' + rankHtml + tasksHtml + '</div>'
-              : '') +
+          '<div class="bsh-home__head">' +
+            '<h1 class="bsh-h1"><span class="bsh-accent">Hello</span>' +
+              (first ? ', ' + esc(first) : '') + '</h1>' +
+            '<p class="bsh-lead" style="max-width:560px">' + lead + '</p>' +
           '</div>' +
           (journeyHtml
-            ? '<div class="bsh-home__col">' +
-                '<div class="bsh-home__head">' +
-                  '<h2 class="bsh-h2"><span class="bsh-accent">Your</span> journey</h2>' +
-                  '<p class="bsh-lead">' + esc(journeyLead(S.msMine)) + '</p>' +
-                '</div>' +
-                journeyHtml +
+            ? '<div class="bsh-home__head bsh-home__head--aside">' +
+                '<h2 class="bsh-h2"><span class="bsh-accent">Your</span> journey</h2>' +
+                '<p class="bsh-lead">' + esc(journeyLead(S.msMine)) + '</p>' +
               '</div>'
             : '') +
+          (rankHtml || tasksHtml
+            ? '<div class="bsh-duo">' + rankHtml + tasksHtml + '</div>'
+            : '') +
+          (journeyHtml ? '<div class="bsh-home__aside">' + journeyHtml + '</div>' : '') +
         '</section>'
       /* Nothing to show yet: the greeting still needs somewhere to live. */
       : '<section class="bsh-hero">' +

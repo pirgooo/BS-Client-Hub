@@ -266,8 +266,13 @@ in — and on the right the arena's journey, read as a column.
 
 The header is one row: the wordmark and the sections on the left, then the
 client's own pill — a laurel emblem carrying their level, their name and venue,
-and their experience — followed by settings and **Sign out**. The emblem, the
-name and the gear all lead to the profile.
+and their experience — and **Sign out**. The pill leads to the profile.
+
+Every screen is laid out to the header's own width, so the page has one left
+edge and one right edge from the top down. The classes that carry a screen's
+vertical rhythm (`.bsh-kb`, `.bsh-profile`, `.bsh-adm`) sit on `.bsh-wrap`
+itself, so they set `padding-top` and `padding-bottom` only — a shorthand there
+drops the wrapper's side padding and the content runs wider than the header.
 
 The manager's name and WhatsApp button are on the profile screen and on any
 article held back by a subscription, rather than on the home screen.
