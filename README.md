@@ -145,6 +145,38 @@ A plain **T123 "HTML code"** block needs none of that, since it already grows
 with its content. Prefer it unless the page is being designed around a Zero
 Block canvas.
 
+### On a phone
+
+The hub is one layout that rearranges itself; there is no separate mobile
+version to keep in step. Below 720px it changes shape rather than shrinking:
+
+- The header splits in two — the wordmark, level, avatar and **Sign out** on
+  top, the sections on a row of their own that scrolls sideways and keeps the
+  current one in view. The client's name and venue drop out of the bar; the
+  avatar stands in for them, and the full name is one tap away on the profile.
+- Category chips in the knowledge base become a single scrolling row instead of
+  three wrapped ones, which gives a whole article back above the fold.
+- Everything that was a row of columns — the latest-material list, the client
+  cards in the admin list — stacks.
+- The arena journey scrolls sideways and snaps to a milestone.
+- Every control is at least 44px tall, and every input is 16px, because iOS
+  zooms the whole page when a field is smaller than that.
+- Hover effects are switched off, since on a touch screen a hovered state
+  sticks after the tap and leaves a card looking selected.
+- **The padlock tooltip has no equivalent on a phone**, so opening a paywalled
+  section says the same thing in a line above the articles, on every device.
+
+Turning the phone re-measures the block, so a Zero Block artboard follows the
+new height in both directions rather than leaving a screenful of empty space
+under a landscape layout.
+
+One thing to check in Tilda: a Zero Block keeps a separate artboard per
+breakpoint. If the mobile artboards were never set up, Tilda may scale the
+desktop one down instead of letting the block lay itself out, and the hub will
+arrive as a shrunken copy of the desktop view rather than the layout above.
+The T123 "HTML code" block has no artboards and no such setting, which is the
+other reason to prefer it.
+
 ---
 
 ## Step 4 — Auth URLs
@@ -424,6 +456,10 @@ A client counts as subscribed when `profiles.status` is `active` **and**
 | cell | cell |
 ---                   (a horizontal rule)
 ```
+
+Quotation marks and angle brackets are safe to type anywhere, the blockquote
+marker included — the escaping runs before the parser, so `> like this` still
+becomes a quotation.
 
 There is no fenced code block and no nesting of lists inside lists. Raw HTML is
 escaped rather than rendered, on purpose: an article cannot inject markup into

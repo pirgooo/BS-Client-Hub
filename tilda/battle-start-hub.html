@@ -202,6 +202,10 @@
 .bsh-tab--locked:hover { border-color: var(--bsh-pink); }
 .bsh-tab--locked.is-active { background: var(--bsh-navy); border-color: var(--bsh-navy); color: #fff; }
 
+/* Said in plain sight, for the readers who cannot hover over the chip. */
+.bsh-kb__note { margin: -8px 0 22px; font-size: 14px; line-height: 1.5; }
+.bsh-kb__note .bsh-link { color: inherit; text-decoration: underline; }
+
 /* ---------------------------------------------------------------------
    TOOLTIP
    A hover note that explains why something is closed. Pure CSS, because
@@ -606,19 +610,130 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
 /* ---------------------------------------------------------------------
    RESPONSIVE
    --------------------------------------------------------------------- */
+/* Hover belongs to a mouse. On a touch screen the state sticks after a
+   tap, so a card stays lifted and a row stays pink until something else
+   is touched. These effects are decoration, so they are simply not
+   offered to devices that cannot really hover. */
+@media (hover: none) {
+  .bsh-shortcut:hover { transform: none; box-shadow: var(--bsh-shadow); }
+  .bsh-art:hover      { background: var(--bsh-soft); transform: none; }
+  .bsh-art--locked:hover { border-color: #D6DCEC; }
+  .bsh-recent__row:hover { color: inherit; }
+  .bsh-task:hover     { background: var(--bsh-soft); }
+  .bsh-tab:hover      { border-color: var(--bsh-line); }
+  .bsh-tab--locked:hover { border-color: var(--bsh-line); }
+  .bsh-nav__link:hover { background: none; }
+  .bsh-nav__link.is-active:hover { background: var(--bsh-soft); }
+}
+
 @media (max-width: 960px) {
   .bsh-cards { grid-template-columns: repeat(2, minmax(0,1fr)); }
   .bsh-profile__cols { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* ---------------------------------------------------------------------
+   PHONE
+   One column, one thumb. Three rules drive everything below:
+   every control is at least 44px tall, every input is at least 16px so
+   iOS does not zoom the page on focus, and anything that cannot fit
+   scrolls sideways inside its own frame rather than widening the page.
+   --------------------------------------------------------------------- */
 @media (max-width: 720px) {
-  .bsh-card { padding: 22px; border-radius: var(--bsh-radius-md); }
+  .bsh-wrap { padding: 0 16px; }
+  .bsh-card { padding: 20px 18px; border-radius: var(--bsh-radius-md); }
   .bsh-cards, .bsh-kb__grid, .bsh-profile__row { grid-template-columns: minmax(0, 1fr); }
-  .bsh-hero { padding-top: 28px; }
-  .bsh-kb, .bsh-profile { padding: 28px 0 48px; }
-  .bsh-nav { border-radius: var(--bsh-radius-lg); padding: 12px 14px; flex-wrap: wrap; }
-  .bsh-nav__links { order: 3; width: 100%; overflow-x: auto; padding-top: 8px; }
-  .bsh-nav__side { margin-left: auto; }
+  .bsh-hero { padding-top: 22px; }
+  .bsh-kb, .bsh-profile { padding: 24px 0 44px; }
+  .bsh-lead { font-size: 16px; }
+
+  /* --- navigation: identity on top, sections underneath --- */
+  .bsh-nav {
+    border-radius: var(--bsh-radius-lg);
+    padding: 10px 12px; gap: 8px; flex-wrap: wrap;
+  }
+  .bsh-nav__logo { width: 96px; height: 20px; margin-right: 0; }
+  /* The avatar carries the identity here; the name is on the profile
+     screen, and spelling it out costs the row more than it is worth. */
+  .bsh-nav__user > div:last-child { display: none; }
+  .bsh-nav__side { gap: 8px; }
+  .bsh-nav__links {
+    order: 3; width: 100%; gap: 2px;
+    overflow-x: auto; scrollbar-width: none;
+    padding-top: 6px; scroll-padding-inline: 16px;
+  }
+  .bsh-nav__links::-webkit-scrollbar { display: none; }
+  .bsh-nav__link { padding: 11px 12px; min-height: 44px; display: flex; align-items: center; }
+
+  /* --- controls a thumb has to hit --- */
+  .bsh-btn { min-height: 48px; padding: 14px 22px; }
+  .bsh-btn--sm { min-height: 44px; padding: 12px 16px; }
+  .bsh-lvl { min-height: 40px; display: inline-flex; align-items: center; }
+  /* The wordmark stays small; only the area a thumb may land on grows. */
+  .bsh-nav__logo { position: relative; }
+  .bsh-nav__logo::after { content: ''; position: absolute; inset: -13px -10px; }
+  .bsh-back { display: inline-flex; align-items: center; min-height: 44px; padding-right: 8px; }
+  .bsh-auth__forgot {
+    display: inline-flex; align-items: center; min-height: 44px;
+    float: right; margin: -10px 0 8px;
+  }
+
+  /* --- forms: 16px or iOS zooms the whole page on focus --- */
+  .bsh-input, .bsh-input::placeholder, textarea.bsh-input { font-size: 16px; }
+  .bsh-input { padding: 13px 14px; }
+  .bsh-field__label { font-size: 13px; }
+  .bsh-form__actions { flex-direction: column-reverse; align-items: stretch; gap: 10px; }
+  .bsh-form__actions .bsh-btn { width: 100%; }
+
+  /* --- sign in: near the top, so the keyboard does not push it away --- */
+  .bsh-auth { min-height: 0; display: block; padding: 28px 16px 48px; }
+  .bsh-auth__box { margin: 0 auto; }
+  .bsh-auth__logo .bsh-logo { width: 152px; height: 31px; }
+
+  /* --- category chips: one row that scrolls, the phone-native pattern --- */
+  .bsh-tabs {
+    flex-wrap: nowrap; overflow-x: auto; gap: 8px;
+    margin: 0 -18px 20px; padding: 2px 18px 8px;
+    scrollbar-width: none; scroll-padding-inline: 18px;
+  }
+  .bsh-tabs::-webkit-scrollbar { display: none; }
+  .bsh-tab { flex: none; min-height: 44px; padding: 11px 16px; }
+
+  /* --- latest material: a row of columns becomes a stack --- */
+  .bsh-recent__row { flex-wrap: wrap; align-items: flex-start; gap: 8px 8px; padding: 15px 0; }
+  .bsh-recent__body { flex: 1 0 100%; order: 2; }
+  .bsh-recent__arrow { display: none; }
+  .bsh-recent__title { font-size: 15.5px; }
+
+  /* --- the journey: a scroller that shows it is one --- */
+  .bsh-path__track {
+    margin: 0 -18px; padding: 14px 18px 10px;
+    scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch;
+  }
+  .bsh-path__step { flex: 0 0 124px; scroll-snap-align: center; }
+
+  /* --- article body --- */
+  .bsh-prose { font-size: 16px; }
+  .bsh-prose h2 { font-size: 22px; }
+  .bsh-prose h3 { font-size: 18px; }
+  .bsh-locked { padding: 40px 6px; }
+
+  /* --- client list: two columns of facts under the name --- */
+  .bsh-adm__row { gap: 10px 14px; }
+  .bsh-adm__cell { min-width: 0; flex: 1 1 40%; }
+  .bsh-adm__go { display: none; }
 }
+
+/* Narrow phones: the identity block gives up the level chip too. */
+@media (max-width: 400px) {
+  .bsh-nav__logo { width: 84px; height: 17px; }
+  .bsh-btn--sm { padding: 12px 13px; font-size: 13.5px; }
+  .bsh-h1 { font-size: 27px; }
+}
+
+/* Long words — a URL in a profile, a name with no spaces — must break
+   rather than push the layout sideways. */
+.bsh-prose, .bsh-art__sum, .bsh-recent__sum, .bsh-shortcut__text,
+.bsh-adm__cell, .bsh-nav__name, .bsh-nav__company { overflow-wrap: anywhere; }
 </style>
 
 <div class="bsh" id="bsh-app">
@@ -732,6 +847,8 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
      Supported: headings, lists, tables, quotes, code, links, images,
      bold/italic and horizontal rules.
      ------------------------------------------------------------------- */
+  var QUOTE = /^(?:&gt;|>)\s?/;
+
   function markdown(src) {
     if (!src) return '';
     var lines = esc(src).replace(/\r\n/g, '\n').split('\n');
@@ -781,10 +898,12 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
         continue;
       }
 
-      /* blockquote */
-      if (/^>\s?/.test(line)) {
+      /* Blockquote. The source was escaped before it got here, so the
+         marker arrives as &gt; rather than >; matching only the raw
+         character left every quotation on the page as literal text. */
+      if (QUOTE.test(line)) {
         var quote = [];
-        while (i < lines.length && /^>\s?/.test(lines[i])) { quote.push(lines[i].replace(/^>\s?/, '')); i++; }
+        while (i < lines.length && QUOTE.test(lines[i])) { quote.push(lines[i].replace(QUOTE, '')); i++; }
         out.push('<blockquote>' + inline(quote.join(' ')) + '</blockquote>');
         continue;
       }
@@ -812,7 +931,7 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
       /* paragraph */
       var para = [];
       while (i < lines.length && lines[i].trim() &&
-             !/^(#{1,4}\s|>|\s*[-*+]\s|\s*\d+\.\s)/.test(lines[i])) { para.push(lines[i]); i++; }
+             !/^(#{1,4}\s|&gt;|>|\s*[-*+]\s|\s*\d+\.\s)/.test(lines[i])) { para.push(lines[i]); i++; }
       out.push('<p>' + inline(para.join(' ')) + '</p>');
     }
     return out.join('\n');
@@ -945,10 +1064,12 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
      ------------------------------------------------------------------- */
   var HOST_CLASS = /(^|\s)(t396__artboard|t396__elem|t396|tn-atom|t-rec|t-container|t123)(\s|$)/;
 
+  var fitTimer = null;
   function fitHost() {
     /* wait for layout, then again once fonts and images have settled */
     requestAnimationFrame(function () { applyTopGap(); applyFit(); paintPage(); });
-    setTimeout(function () { applyTopGap(); applyFit(); paintPage(); }, 450);
+    clearTimeout(fitTimer);
+    fitTimer = setTimeout(function () { applyTopGap(); applyFit(); paintPage(); }, 450);
   }
 
   /* The block only covers its own column; the page around it stays the
@@ -994,7 +1115,12 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
       if (HOST_CLASS.test(typeof cls === 'string' ? cls : '') || inline) {
         var css = window.getComputedStyle(el);
         if (css.overflow === 'hidden' || css.overflowY === 'hidden') el.style.overflow = 'visible';
-        if (el.offsetHeight < height) {
+        /* Grow into a host the first time. After that the hub owns that
+           height and sets it exactly, in both directions: turning a phone
+           to landscape makes the content shorter, and a host left at the
+           portrait height would leave a screen of empty space below. */
+        if (el.getAttribute('data-bsh-fit') || el.offsetHeight < height) {
+          el.setAttribute('data-bsh-fit', '1');
           el.style.height    = height + 'px';
           el.style.minHeight = height + 'px';
         }
@@ -1047,7 +1173,23 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
     '</nav></div>';
   }
 
+  /* A row that scrolls sideways on a phone can hide the item that is
+     currently chosen. Nudge it into view, without scrolling the page
+     itself — scrollIntoView would drag the whole document. */
+  function revealActive(scroller, selector) {
+    if (!scroller) return;
+    var el = scroller.querySelector(selector);
+    if (!el) return;
+    var want = el.offsetLeft - (scroller.clientWidth - el.offsetWidth) / 2;
+    var max  = scroller.scrollWidth - scroller.clientWidth;
+    if (max <= 0) return;
+    scroller.scrollLeft = Math.max(0, Math.min(want, max));
+  }
+
   function bindLogout() {
+    /* The section links are a scrolling row on a phone too. */
+    revealActive(document.querySelector('.bsh-nav__links'), '.bsh-nav__link.is-active');
+
     var btn = document.getElementById('bsh-logout');
     if (!btn) return;
     btn.addEventListener('click', function () {
@@ -1617,6 +1759,15 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
               esc(S.kbQuery) + '">' +
           '</div>' +
           '<div class="bsh-tabs">' + tabs + '</div>' +
+          /* The padlock on the tab explains itself on hover, and a phone
+             cannot hover. Opening the section says it in plain sight. */
+          (catLocked(active)
+            ? '<div class="bsh-alert bsh-alert--info bsh-kb__note">' +
+                '🔒 This section opens once you buy a subscription. ' +
+                'Your manager can set one up — their details are on your ' +
+                '<a class="bsh-link" href="#/profile">profile</a>.' +
+              '</div>'
+            : '') +
           (cards
             ? '<div class="bsh-kb__grid">' + cards + '</div>'
             : '<div class="bsh-empty"><div class="bsh-empty__icon">🔍</div>' +
@@ -1632,6 +1783,9 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
         go(slug ? '#/kb/c/' + slug : '#/kb');
       });
     });
+    /* On a phone the chips are one scrolling row, so the chosen one has
+       to be brought into view or it sits off-screen with no sign of it. */
+    revealActive(app.querySelector('.bsh-tabs'), '.bsh-tab.is-active');
 
     var input = document.getElementById('bsh-q');
     input.addEventListener('input', function () {
@@ -2573,6 +2727,11 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
         window.addEventListener('resize', syncRail);
         window.addEventListener('resize', fitHost);
         window.addEventListener('load', fitHost);
+        /* Turning the phone changes the height of everything; the event
+           lands before the new layout, so measure on the far side of it. */
+        window.addEventListener('orientationchange', function () {
+          setTimeout(fitHost, 120);
+        });
         if (S.session && S.recovery) return go('#/reset');
         route();
       }).catch(function (err) {
