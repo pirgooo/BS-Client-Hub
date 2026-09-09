@@ -248,10 +248,37 @@ the Clients list ready to edit.
 
 ---
 
+## The home screen
+
+It is a dashboard, not a stack. The top of the page is one grid: on the left the
+greeting and two cards side by side — the rank, and what is still worth filling
+in — and on the right the arena's journey, read as a column.
+
+- **The rank card** is a ring rather than a bar. Inside it: the medal, how far
+  the client is towards the next level, and under it the exact experience left
+  and the name of the rank they are climbing to.
+- **Earn experience** lists what is still unfilled and what each field is worth,
+  ending with the reward waiting at the next level.
+- **Latest material** below carries the category filters and a search that opens
+  from the magnifier, so a client can find something without leaving the page.
+
+The header is one row: the wordmark and the sections on the left, then the
+client's own pill — a laurel emblem carrying their level, their name and venue,
+and their experience — followed by settings and **Sign out**. The emblem, the
+name and the gear all lead to the profile.
+
+The manager's name and WhatsApp button are on the profile screen and on any
+article held back by a subscription, rather than on the home screen.
+
+---
+
 ## The arena's journey
 
-Beside the experience bar the home screen carries a second, quieter track: the
-venue's real history, from signing the agreement to a year in the network.
+Down the right of the home screen runs a second, quieter track: the venue's real
+history, from signing the agreement to a year in the network. It reads top to
+bottom — a passed milestone is a green tick with the date it happened, the one
+in progress is picked out in crimson, and the ones still ahead say what they
+will mean.
 
 It is deliberately **not** a score. The milestones are facts about the client's
 own business, so there is nothing to inflate and nothing that goes stale once
@@ -580,11 +607,20 @@ brand packs, covers.
 
 ## Finding your way around a page
 
-The home screen carries a column of dots at the left edge of the window naming
-its sections. Hovering opens the labels, clicking scrolls, and the current
-section stays highlighted as the reader moves — so what is further down the page
-is visible without scrolling to find out. It hides below 1180px, where it would
-sit on top of the content.
+A long, stacked screen carries a column of dots at the left edge of the window
+naming its sections. Hovering opens the labels, clicking scrolls, and the
+current section stays highlighted as the reader moves — so what is further down
+the page is visible without scrolling to find out. It hides below 1180px, where
+it would sit on top of the content.
+
+It appears once a screen has **three** sections worth pointing at. The home
+screen, since it became a dashboard, has two — the grid at the top and the feed
+below — so it does not show one. Lower the threshold in `screenHome` if you want
+it back:
+
+```js
+paint((rail.length > 2 ? railMarkup(rail) : '') + …
+```
 
 ---
 

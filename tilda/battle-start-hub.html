@@ -26,6 +26,8 @@
   --bsh-blue:        #2F6BFF;
   --bsh-blue-dark:   #1E55E0;
   --bsh-blue-soft:   #E8EFFF;
+  --bsh-green:       #16B364;   /* a milestone already passed */
+  --bsh-green-soft:  #E3F7EC;
 
   --bsh-navy:        #1F2A5A;   /* body text   */
   --bsh-navy-2:      #2D3C6E;   /* paragraphs  */
@@ -174,15 +176,6 @@
 .bsh-nav__link:hover { background: var(--bsh-soft); }
 .bsh-nav__link.is-active { background: var(--bsh-soft); color: var(--bsh-pink); }
 .bsh-nav__side { display: flex; align-items: center; gap: 10px; margin-left: auto; }
-.bsh-nav__user { display: flex; align-items: center; gap: 10px; padding-right: 4px; }
-.bsh-nav__avatar {
-  width: 36px; height: 36px; border-radius: 50%; flex: none;
-  background: var(--bsh-pink); color: #fff;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 14px; font-weight: 800;
-}
-.bsh-nav__name { font-size: 14px; font-weight: 700; line-height: 1.2; }
-.bsh-nav__company { font-size: 12px; color: var(--bsh-muted); line-height: 1.2; }
 
 /* ---------------------------------------------------------------------
    TABS (category switcher, like the reference's 10 m2 / 400 m2 row)
@@ -308,23 +301,6 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
    HOME
    --------------------------------------------------------------------- */
 .bsh-hero { padding: 44px 0 8px; }
-.bsh-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
-.bsh-shortcut {
-  display: block; background: #fff; border-radius: var(--bsh-radius-lg);
-  box-shadow: var(--bsh-shadow); padding: 26px;
-  transition: transform .18s ease, box-shadow .18s ease;
-}
-.bsh-shortcut:hover { transform: translateY(-3px); box-shadow: 0 16px 46px rgba(31,42,90,.12); }
-.bsh-shortcut__icon {
-  width: 46px; height: 46px; border-radius: 14px; margin-bottom: 16px;
-  display: flex; align-items: center; justify-content: center; font-size: 22px;
-  background: var(--bsh-pink-soft);
-}
-.bsh-shortcut--blue .bsh-shortcut__icon { background: var(--bsh-blue-soft); }
-.bsh-shortcut--navy .bsh-shortcut__icon { background: var(--bsh-soft); }
-.bsh-shortcut__title { font-size: 19px; font-weight: 800; letter-spacing: -.01em; margin-bottom: 6px; }
-.bsh-shortcut__text { font-size: 14px; color: var(--bsh-muted); line-height: 1.5; }
-.bsh-shortcut__meta { margin-top: 16px; }
 
 .bsh-recent { margin-top: 34px; }
 .bsh-recent__row { display: flex; align-items: center; gap: 16px; padding: 16px 0; border-top: 1px solid var(--bsh-line); }
@@ -345,11 +321,6 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
   background: var(--bsh-pink-soft); color: var(--bsh-pink);
   font-size: 12px; font-weight: 800; letter-spacing: .02em; white-space: nowrap;
 }
-.bsh-xp { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 30px; align-items: stretch; }
-.bsh-xp__side { display: flex; flex-direction: column; }
-.bsh-xp__now { display: flex; align-items: baseline; gap: 12px; }
-.bsh-xp__level { font-size: 28px; font-weight: 800; letter-spacing: -.02em; }
-.bsh-xp__count { margin-left: auto; font-size: 14px; font-weight: 800; color: var(--bsh-muted); }
 .bsh-xp__bar { height: 12px; border-radius: 999px; background: var(--bsh-soft); overflow: hidden; margin: 14px 0 10px; }
 .bsh-xp__fill {
   height: 100%; border-radius: 999px;
@@ -437,65 +408,6 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
   transition: max-width .22s ease, opacity .18s ease;
 }
 .bsh-rail:hover .bsh-rail__label { max-width: 200px; opacity: 1; }
-
-/* ---------------------------------------------------------------------
-   THE JOURNEY. The arena's real history rather than a score, so the
-   track reads as a road: behind you it is solid, ahead it is faint, and
-   the next stop pulses.
-   --------------------------------------------------------------------- */
-.bsh-path__track {
-  display: flex; align-items: flex-start;
-  /* overflow-x clips vertically too, so the pulsing ring needs headroom
-     inside the scroller rather than outside it. */
-  overflow-x: auto; padding: 14px 0 8px; margin: 0 -6px;
-}
-.bsh-path__track::-webkit-scrollbar { height: 6px; }
-.bsh-path__track::-webkit-scrollbar-thumb { background: var(--bsh-line); border-radius: 999px; }
-
-.bsh-path__step { flex: 1 0 132px; position: relative; text-align: center; padding: 0 6px; }
-.bsh-path__step::before,
-.bsh-path__step::after {
-  /* level with the middle of a 42px dot that starts 14px down */
-  content: ''; position: absolute; top: 34px; height: 3px; background: var(--bsh-line);
-}
-.bsh-path__step::before { left: 0; right: 50%; }
-.bsh-path__step::after  { left: 50%; right: 0; }
-.bsh-path__step:first-child::before,
-.bsh-path__step:last-child::after { display: none; }
-.bsh-path__step.is-done::before,
-.bsh-path__step.is-done::after,
-.bsh-path__step.is-next::before { background: var(--bsh-pink); }
-
-.bsh-path__dot {
-  position: relative; z-index: 1;
-  width: 42px; height: 42px; margin: 0 auto 12px;
-  border-radius: 50%; border: 4px solid #fff;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 17px; background: var(--bsh-soft);
-}
-.bsh-path__step.is-done .bsh-path__dot { background: var(--bsh-pink); }
-.bsh-path__step.is-next .bsh-path__dot {
-  background: #fff; box-shadow: 0 0 0 3px var(--bsh-pink);
-  animation: bsh-pulse 2.2s ease-in-out infinite;
-}
-@keyframes bsh-pulse {
-  0%, 100% { box-shadow: 0 0 0 3px var(--bsh-pink); }
-  50%      { box-shadow: 0 0 0 8px rgba(236, 30, 94, .16); }
-}
-.bsh-path__step.is-future { opacity: .45; }
-
-.bsh-path__title { font-size: 13px; font-weight: 700; line-height: 1.3; }
-.bsh-path__date  { font-size: 12px; color: var(--bsh-muted); margin-top: 4px; }
-.bsh-path__next {
-  margin-top: 24px; padding: 16px 18px;
-  border-radius: var(--bsh-radius-sm); background: var(--bsh-pink-soft);
-}
-.bsh-path__next b {
-  display: block; font-size: 11px; text-transform: uppercase;
-  letter-spacing: .07em; color: var(--bsh-pink); margin-bottom: 6px;
-}
-.bsh-path__next span { font-size: 15px; font-weight: 700; color: var(--bsh-navy); }
-.bsh-path__next em { display: block; font-style: normal; font-size: 13px; color: var(--bsh-muted); margin-top: 3px; }
 
 /* ---------------------------------------------------------------------
    ADMINISTRATION. Every value here is typed in by hand — the plan is
@@ -610,12 +522,150 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
 /* ---------------------------------------------------------------------
    RESPONSIVE
    --------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------
+   THE IDENTITY PILL in the header: rank emblem, name, experience.
+   --------------------------------------------------------------------- */
+.bsh-me {
+  display: flex; align-items: center; gap: 11px;
+  background: var(--bsh-soft); border-radius: var(--bsh-pill);
+  padding: 5px 8px 5px 6px; color: inherit;
+}
+.bsh-me:hover { background: #E9EDF8; color: inherit; }
+.bsh-me__badge { position: relative; flex: none; width: 54px; height: 56px; }
+.bsh-me__wreath {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  color: #A9B2C6; pointer-events: none;
+}
+.bsh-me__avatar {
+  position: absolute; left: 50%; top: 6px; transform: translateX(-50%);
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--bsh-pink); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800; letter-spacing: -.01em;
+}
+.bsh-me__lvl {
+  position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
+  padding: 1px 6px; border-radius: var(--bsh-pill);
+  background: var(--bsh-navy); color: #fff;
+  font-size: 8.5px; font-weight: 800; letter-spacing: .04em; white-space: nowrap;
+}
+.bsh-me__who { display: grid; min-width: 0; }
+.bsh-me__name { font-size: 14px; font-weight: 800; line-height: 1.2; }
+.bsh-me__company { font-size: 12px; color: var(--bsh-muted); line-height: 1.2; }
+.bsh-me__exp {
+  flex: none; padding: 6px 11px; border-radius: var(--bsh-pill);
+  background: var(--bsh-pink-soft); color: var(--bsh-pink);
+  font-size: 12px; font-weight: 800; white-space: nowrap;
+}
+
+.bsh-iconbtn {
+  flex: none; width: 38px; height: 38px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--bsh-muted); background: none; border: none;
+  cursor: pointer; transition: background .18s ease, color .18s ease;
+}
+.bsh-iconbtn:hover { background: var(--bsh-soft); color: var(--bsh-navy); }
+.bsh-iconbtn svg { width: 19px; height: 19px; display: block; }
+
+/* ---------------------------------------------------------------------
+   HOME: a dashboard rather than a stack. The two things a client acts
+   on — where they stand and what is next — sit side by side, with the
+   journey beside them as the longer story.
+   --------------------------------------------------------------------- */
+.bsh-home { display: grid; grid-template-columns: minmax(0, 1.92fr) minmax(0, 1fr); gap: 26px; padding-top: 8px; }
+.bsh-home { padding-bottom: 14px; }
+.bsh-home + .bsh-recent, .bsh-home + .bsh-section { padding-top: 14px; margin-top: 0; }
+.bsh-home__col { display: flex; flex-direction: column; }
+.bsh-home__head { margin-bottom: 22px; }
+.bsh-duo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.06fr); gap: 22px; flex: 1; }
+.bsh-duo > * { min-width: 0; }
+
+/* --- the rank card, built around a ring --- */
+.bsh-rank { display: flex; flex-direction: column; }
+.bsh-rank__head { display: flex; align-items: center; gap: 12px; }
+/* The tasks beside it decide the height, so the ring centres in whatever
+   room is left rather than leaving a pool of white below itself. */
+.bsh-rank__mid { margin: auto 0; padding: 18px 0; }
+.bsh-rank__title { font-size: 24px; font-weight: 800; letter-spacing: -.02em; }
+.bsh-ring { position: relative; width: 200px; max-width: 100%; margin: 0 auto 8px; }
+.bsh-ring svg { display: block; width: 100%; height: auto; transform: rotate(-90deg); }
+.bsh-ring__rail { fill: none; stroke: var(--bsh-soft); }
+.bsh-ring__fill {
+  fill: none; stroke: var(--bsh-pink); stroke-linecap: round;
+  transition: stroke-dashoffset .7s cubic-bezier(.4, 0, .2, 1);
+}
+/* A soft halo, so the ring reads as an award rather than a progress bar. */
+.bsh-ring__glow {
+  position: absolute; inset: 12%; border-radius: 50%;
+  background: radial-gradient(circle, rgba(236,30,94,.16) 0%, rgba(236,30,94,0) 68%);
+  pointer-events: none;
+}
+.bsh-ring__mid {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 0 18px;
+}
+.bsh-ring__icon { font-size: 30px; line-height: 1; margin-bottom: 4px; filter: grayscale(.85) opacity(.75); }
+.bsh-ring__cap { font-size: 12.5px; font-weight: 700; color: var(--bsh-muted); }
+.bsh-ring__pct { font-size: 40px; font-weight: 800; letter-spacing: -.03em; color: var(--bsh-pink); line-height: 1.1; }
+.bsh-rank__foot { font-size: 13.5px; color: var(--bsh-muted); text-align: center; margin-top: 2px; }
+
+/* --- the journey, read top to bottom --- */
+.bsh-road { display: grid; gap: 0; }
+.bsh-road__step { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 14px; position: relative; }
+.bsh-road__step + .bsh-road__step { margin-top: 4px; }
+/* the line that joins one milestone to the next */
+.bsh-road__step::before {
+  content: ''; position: absolute; left: 21px; top: 40px; bottom: -4px;
+  width: 2px; background: var(--bsh-line);
+}
+.bsh-road__step:last-child::before { display: none; }
+.bsh-road__step.is-done::before { background: var(--bsh-green); }
+.bsh-road__dot {
+  width: 44px; height: 44px; border-radius: 50%; position: relative; z-index: 1;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; background: var(--bsh-soft); color: var(--bsh-navy);
+}
+.bsh-road__step.is-done .bsh-road__dot { background: var(--bsh-green); color: #fff; font-size: 19px; font-weight: 800; }
+.bsh-road__step.is-next .bsh-road__dot {
+  background: var(--bsh-pink); color: #fff;
+  box-shadow: 0 0 0 7px var(--bsh-pink-soft), 0 8px 20px rgba(236, 30, 94, .3);
+}
+.bsh-road__step.is-future { opacity: .55; }
+.bsh-road__body { padding: 3px 0 14px; min-width: 0; }
+.bsh-road__title { font-size: 15px; font-weight: 800; letter-spacing: -.01em; line-height: 1.3; }
+.bsh-road__sub { font-size: 13px; color: var(--bsh-muted); line-height: 1.4; margin-top: 2px; }
+.bsh-road__step.is-next .bsh-road__title { color: var(--bsh-pink); }
+
+/* --- latest material: filters and a search that stays out of the way --- */
+.bsh-feed__head {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 6px; padding-bottom: 16px;
+}
+.bsh-feed__chips {
+  display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;
+  overflow-x: auto; scrollbar-width: none; padding: 2px 0;
+}
+.bsh-feed__chips::-webkit-scrollbar { display: none; }
+.bsh-chip {
+  flex: none; padding: 9px 16px; border-radius: var(--bsh-pill);
+  background: #fff; border: 1px solid var(--bsh-line);
+  color: var(--bsh-navy); font-family: var(--bsh-font);
+  font-size: 14px; font-weight: 700; white-space: nowrap;
+  cursor: pointer; transition: all .18s ease;
+}
+.bsh-chip:hover { border-color: #C9D0E4; }
+.bsh-chip.is-active { background: var(--bsh-navy); border-color: var(--bsh-navy); color: #fff; }
+.bsh-chip--locked { color: var(--bsh-muted); border-style: dashed; }
+.bsh-feed__find { flex: none; }
+.bsh-feed__box { display: none; margin-bottom: 16px; }
+.bsh-feed__box.is-open { display: block; }
+
 /* Hover belongs to a mouse. On a touch screen the state sticks after a
    tap, so a card stays lifted and a row stays pink until something else
    is touched. These effects are decoration, so they are simply not
    offered to devices that cannot really hover. */
 @media (hover: none) {
-  .bsh-shortcut:hover { transform: none; box-shadow: var(--bsh-shadow); }
   .bsh-art:hover      { background: var(--bsh-soft); transform: none; }
   .bsh-art--locked:hover { border-color: #D6DCEC; }
   .bsh-recent__row:hover { color: inherit; }
@@ -626,9 +676,36 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
   .bsh-nav__link.is-active:hover { background: var(--bsh-soft); }
 }
 
+/* The header runs out of room for one row long before a phone does: four
+   sections, an identity pill and two buttons. Give the sections a row of
+   their own as soon as they stop fitting, or the pill is squeezed until
+   its own contents stack. */
+@media (max-width: 900px) {
+  .bsh-nav {
+    border-radius: var(--bsh-radius-lg);
+    padding: 10px 12px; gap: 8px; flex-wrap: wrap;
+  }
+  .bsh-nav__links {
+    order: 3; width: 100%; gap: 2px;
+    overflow-x: auto; scrollbar-width: none;
+    padding-top: 6px; scroll-padding-inline: 16px;
+  }
+  .bsh-nav__links::-webkit-scrollbar { display: none; }
+  .bsh-nav__side { margin-left: auto; }
+}
+
+/* The dashboard needs real width for three cards abreast. Below that the
+   journey drops under the pair, and below that again the pair unstacks. */
+@media (max-width: 1120px) {
+  .bsh-home { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .bsh-home__col + .bsh-home__col .bsh-home__head { margin-top: 26px; }
+}
 @media (max-width: 960px) {
-  .bsh-cards { grid-template-columns: repeat(2, minmax(0,1fr)); }
   .bsh-profile__cols { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 820px) {
+  .bsh-duo { grid-template-columns: minmax(0, 1fr); }
+  .bsh-rank__mid { padding: 6px 0 0; }
 }
 
 /* ---------------------------------------------------------------------
@@ -641,27 +718,34 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
 @media (max-width: 720px) {
   .bsh-wrap { padding: 0 16px; }
   .bsh-card { padding: 20px 18px; border-radius: var(--bsh-radius-md); }
-  .bsh-cards, .bsh-kb__grid, .bsh-profile__row { grid-template-columns: minmax(0, 1fr); }
+  .bsh-kb__grid, .bsh-profile__row { grid-template-columns: minmax(0, 1fr); }
   .bsh-hero { padding-top: 22px; }
   .bsh-kb, .bsh-profile { padding: 24px 0 44px; }
   .bsh-lead { font-size: 16px; }
 
-  /* --- navigation: identity on top, sections underneath --- */
-  .bsh-nav {
-    border-radius: var(--bsh-radius-lg);
-    padding: 10px 12px; gap: 8px; flex-wrap: wrap;
-  }
   .bsh-nav__logo { width: 96px; height: 20px; margin-right: 0; }
-  /* The avatar carries the identity here; the name is on the profile
+  /* The emblem carries the identity here; the name is on the profile
      screen, and spelling it out costs the row more than it is worth. */
-  .bsh-nav__user > div:last-child { display: none; }
-  .bsh-nav__side { gap: 8px; }
-  .bsh-nav__links {
-    order: 3; width: 100%; gap: 2px;
-    overflow-x: auto; scrollbar-width: none;
-    padding-top: 6px; scroll-padding-inline: 16px;
-  }
-  .bsh-nav__links::-webkit-scrollbar { display: none; }
+  .bsh-me__who { display: none; }
+  .bsh-me { gap: 8px; padding: 3px 6px 3px 4px; }
+  .bsh-me__badge { width: 42px; height: 44px; }
+  .bsh-me__avatar { width: 24px; height: 24px; font-size: 10.5px; top: 4px; }
+  .bsh-me__lvl { font-size: 7.5px; padding: 1px 5px; }
+  .bsh-me__exp { padding: 5px 9px; font-size: 11.5px; }
+  .bsh-iconbtn { width: 40px; height: 40px; }
+  .bsh-nav__side { gap: 6px; }
+
+  /* the dashboard, one card at a time */
+  .bsh-duo { gap: 16px; }
+  .bsh-ring { width: 168px; }
+  .bsh-ring__pct { font-size: 34px; }
+  .bsh-ring__icon { font-size: 26px; }
+  .bsh-rank__title { font-size: 21px; }
+  .bsh-road__step { grid-template-columns: 40px minmax(0, 1fr); gap: 12px; }
+  .bsh-road__dot { width: 40px; height: 40px; }
+  .bsh-road__step::before { left: 19px; top: 36px; }
+  .bsh-chip { min-height: 44px; padding: 11px 15px; }
+  .bsh-feed__head { margin: 0 -18px 6px; padding: 0 18px 14px; }
   .bsh-nav__link { padding: 11px 12px; min-height: 44px; display: flex; align-items: center; }
 
   /* --- controls a thumb has to hit --- */
@@ -704,13 +788,6 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
   .bsh-recent__arrow { display: none; }
   .bsh-recent__title { font-size: 15.5px; }
 
-  /* --- the journey: a scroller that shows it is one --- */
-  .bsh-path__track {
-    margin: 0 -18px; padding: 14px 18px 10px;
-    scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch;
-  }
-  .bsh-path__step { flex: 0 0 124px; scroll-snap-align: center; }
-
   /* --- article body --- */
   .bsh-prose { font-size: 16px; }
   .bsh-prose h2 { font-size: 22px; }
@@ -732,8 +809,8 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
 
 /* Long words — a URL in a profile, a name with no spaces — must break
    rather than push the layout sideways. */
-.bsh-prose, .bsh-art__sum, .bsh-recent__sum, .bsh-shortcut__text,
-.bsh-adm__cell, .bsh-nav__name, .bsh-nav__company { overflow-wrap: anywhere; }
+.bsh-prose, .bsh-art__sum, .bsh-recent__sum, .bsh-road__sub,
+.bsh-adm__cell, .bsh-me__name, .bsh-me__company { overflow-wrap: anywhere; }
 </style>
 
 <div class="bsh" id="bsh-app">
@@ -1149,6 +1226,9 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
     ];
     if (isAdmin()) links.push({ hash: '#/admin', label: 'Clients', key: 'admin' });
 
+    var ranked = (S.levels || []).length;
+    var L      = ranked ? levelInfo() : null;
+
     return '<div class="bsh-wrap"><nav class="bsh-nav">' +
       '<a class="bsh-nav__logo bsh-logo" href="#/hub" aria-label="' +
         esc(CONFIG.brand) + '"></a>' +
@@ -1159,18 +1239,53 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
         }).join('') +
       '</div>' +
       '<div class="bsh-nav__side">' +
-        ((S.levels || []).length ? '<a class="bsh-lvl" href="#/hub" title="Experience">LVL ' +
-                    levelInfo().level + ' · ' + levelInfo().exp + ' EXP</a>' : '') +
-        '<div class="bsh-nav__user">' +
-          '<div class="bsh-nav__avatar">' + esc(initials(p.full_name, email)) + '</div>' +
-          '<div>' +
-            '<div class="bsh-nav__name">' + esc(p.full_name || email) + '</div>' +
-            '<div class="bsh-nav__company">' + esc(p.company || p.city || email) + '</div>' +
-          '</div>' +
-        '</div>' +
+        '<a class="bsh-me" href="#/profile" title="Your profile">' +
+          '<span class="bsh-me__badge">' +
+            (ranked ? wreathSvg() : '') +
+            '<span class="bsh-me__avatar">' + esc(initials(p.full_name, email)) + '</span>' +
+            (ranked ? '<span class="bsh-me__lvl">LVL ' + L.level + '</span>' : '') +
+          '</span>' +
+          '<span class="bsh-me__who">' +
+            '<span class="bsh-me__name">' + esc(p.full_name || email) + '</span>' +
+            '<span class="bsh-me__company">' + esc(p.company || p.city || email) + '</span>' +
+          '</span>' +
+          (ranked ? '<span class="bsh-me__exp">' + L.exp + ' EXP</span>' : '') +
+        '</a>' +
+        '<a class="bsh-iconbtn" href="#/profile" title="Settings" aria-label="Settings">' + GEAR + '</a>' +
         '<button class="bsh-btn bsh-btn--ghost bsh-btn--sm" id="bsh-logout" type="button">Sign out</button>' +
       '</div>' +
     '</nav></div>';
+  }
+
+  var GEAR =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<circle cx="12" cy="12" r="3.1"/>' +
+    '<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>' +
+    '</svg>';
+
+  /* A laurel wreath around the avatar: the rank emblem. Drawn rather than
+     drawn-on, so it takes the colour of whatever it sits in and costs the
+     page nothing to load. Leaves are laid along two arcs that open at the
+     top, the way a wreath is worn. */
+  function wreathSvg() {
+    var leaves = '', cx = 27, cy = 26, R = 21.5;
+    for (var i = 0; i < 5; i++) {
+      var t = i / 4;
+      for (var k = 0; k < 2; k++) {
+        var side = k ? -1 : 1;
+        var deg  = 90 + side * (48 + t * 74);
+        var rad  = deg * Math.PI / 180;
+        var x    = cx + R * Math.cos(rad);
+        var y    = cy + R * Math.sin(rad);
+        leaves += '<ellipse cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) +
+                  '" rx="4.6" ry="2.4" transform="rotate(' +
+                  (deg + side * 30).toFixed(0) + ' ' + x.toFixed(1) + ' ' + y.toFixed(1) + ')"/>';
+      }
+    }
+    return '<svg class="bsh-me__wreath" viewBox="0 0 54 56" aria-hidden="true">' +
+             '<g fill="currentColor">' + leaves + '</g>' +
+           '</svg>';
   }
 
   /* A row that scrolls sideways on a phone can hide the item that is
@@ -1524,99 +1639,118 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
       if (!byslug[types[i].slug]) { nextIdx = i; break; }
     }
 
+    /* Read top to bottom, the way a path is walked. A passed milestone
+       carries its date; the ones still ahead carry what they mean. */
     var steps = types.map(function (t, i) {
       var got = byslug[t.slug];
       var cls = got ? 'is-done' : (i === nextIdx ? 'is-next' : 'is-future');
-      return '<div class="bsh-path__step ' + cls + '">' +
-        '<div class="bsh-path__dot">' + (got ? '✓' : esc(t.icon || '')) + '</div>' +
-        '<div class="bsh-path__title">' + esc(t.title) + '</div>' +
-        '<div class="bsh-path__date">' + (got ? esc(fmtDay(got.reached_on)) : '—') + '</div>' +
+      var sub = got ? fmtDay(got.reached_on) : (t.description || '');
+      return '<div class="bsh-road__step ' + cls + '">' +
+        '<div class="bsh-road__dot">' + (got ? '✓' : esc(t.icon || '●')) + '</div>' +
+        '<div class="bsh-road__body">' +
+          '<div class="bsh-road__title">' + esc(t.title) + '</div>' +
+          (sub ? '<div class="bsh-road__sub">' + esc(sub) + '</div>' : '') +
+        '</div>' +
       '</div>';
     }).join('');
 
-    var next = nextIdx >= 0 ? types[nextIdx] : null;
-    var done = Object.keys(byslug).length;
+    return '<div class="bsh-card bsh-road-card"><div class="bsh-road">' + steps + '</div></div>';
+  }
 
-    return '<section class="bsh-section" id="bsh-s-journey">' +
-      '<h2 class="bsh-h2"><span class="bsh-accent">Your</span> journey</h2>' +
-      '<p class="bsh-lead" style="margin-bottom:20px">' +
-        (done
-          ? done + ' of ' + types.length + ' milestones behind you.'
-          : 'Your manager marks each milestone as you pass it.') +
-      '</p>' +
-      '<div class="bsh-card">' +
-        '<div class="bsh-path__track">' + steps + '</div>' +
-        (next
-          ? '<div class="bsh-path__next"><b>Next</b><span>' + esc(next.title) + '</span>' +
-            (next.description ? '<em>' + esc(next.description) + '</em>' : '') + '</div>'
-          : '<div class="bsh-path__next"><b>Complete</b><span>' +
-            'You have walked the whole path. Not many arenas get here.</span></div>') +
-      '</div>' +
-    '</section>';
+  /* The line above the journey card, which lives outside it now. */
+  function journeyLead(reached, types) {
+    types = types || S.msTypes || [];
+    var done = 0;
+    (reached || []).forEach(function (m) {
+      for (var i = 0; i < types.length; i++) if (types[i].slug === m.milestone_slug) done++;
+    });
+    return done
+      ? done + ' of ' + types.length + ' milestones behind you.'
+      : 'Your manager marks each milestone as you pass it.';
   }
 
   /* The progress card: where the client stands, and the smallest next
      step towards the thing they cannot read yet. */
-  function xpCard() {
+  function rankCard() {
     if (!(S.levels || []).length) return '';   /* schema not applied yet */
     var L     = levelInfo();
     var tasks = pendingTasks().slice(0, 5);
     var perk  = L.next && L.next.perk;
 
-    return '<section class="bsh-section" id="bsh-s-progress"><div class="bsh-card"><div class="bsh-xp">' +
-      '<div class="bsh-xp__side">' +
-        '<div class="bsh-xp__now">' +
-          '<span class="bsh-lvl">LVL ' + L.level + '</span>' +
-          '<span class="bsh-xp__level">' + esc(L.title) + '</span>' +
-          '<span class="bsh-xp__count">' + L.exp + ' EXP</span>' +
-        '</div>' +
-        '<div class="bsh-xp__bar"><div class="bsh-xp__fill" style="width:' + L.pct + '%"></div></div>' +
-        '<div class="bsh-xp__hint">' +
-          (L.next
-            ? L.toNext + ' EXP to level ' + L.next.level + ' — ' + esc(L.next.title)
-            : 'Top level reached. Your profile is complete.') +
-        '</div>' +
-        (perk
-          ? '<div class="bsh-xp__perk">' +
-              '<b>Waiting at level ' + L.next.level + '</b>' +
-              '<span>' + esc(perk) + '</span>' +
-            '</div>'
-          : '') +
+    /* The ring is one circle drawn twice: a rail all the way round, and
+       the same circle dashed so that only the earned part is painted. */
+    var R    = 76, C = 2 * Math.PI * R;
+    var off  = C * (1 - Math.max(0, Math.min(100, L.pct)) / 100);
+
+    return '<div class="bsh-card bsh-rank">' +
+      '<div class="bsh-rank__head">' +
+        '<span class="bsh-lvl">LVL ' + L.level + '</span>' +
+        '<span class="bsh-rank__title">' + esc(L.title) + '</span>' +
       '</div>' +
-      '<div>' +
-        '<div class="bsh-tasks__title">Earn experience</div>' +
-        (tasks.length
-          ? tasks.map(function (t) {
-              return '<a class="bsh-task" href="#/profile">' +
-                '<span>' +
-                  '<span class="bsh-task__label">' + esc(t.label) + '</span>' +
-                  (t.hint ? '<span class="bsh-task__hint">' + esc(t.hint) + '</span>' : '') +
-                '</span>' +
-                '<span class="bsh-task__pts">+' + t.points + '</span>' +
-              '</a>';
-            }).join('')
-          : '<div class="bsh-tasks__done">Everything is filled in. Nothing left to earn.</div>') +
+      '<div class="bsh-rank__mid">' +
+      '<div class="bsh-ring">' +
+        '<div class="bsh-ring__glow"></div>' +
+        '<svg viewBox="0 0 180 180" aria-hidden="true">' +
+          '<circle class="bsh-ring__rail" cx="90" cy="90" r="' + R + '" stroke-width="13"/>' +
+          '<circle class="bsh-ring__fill" cx="90" cy="90" r="' + R + '" stroke-width="13" ' +
+            'stroke-dasharray="' + C.toFixed(1) + '" stroke-dashoffset="' + off.toFixed(1) + '"/>' +
+        '</svg>' +
+        '<div class="bsh-ring__mid">' +
+          '<div class="bsh-ring__icon">🏅</div>' +
+          '<div class="bsh-ring__cap">' +
+            (L.next ? 'To level ' + L.next.level : 'Top level') +
+          '</div>' +
+          '<div class="bsh-ring__pct">' + L.pct + '%</div>' +
+        '</div>' +
       '</div>' +
-    '</div></div></section>';
+      '<div class="bsh-rank__foot">' +
+        (L.next
+          ? L.toNext + ' EXP to go — ' + esc(L.next.title)
+          : 'Your profile is complete.') +
+      '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  /* What is still on offer, and the reward waiting at the next level. */
+  function tasksCard() {
+    if (!(S.levels || []).length) return '';
+    var L     = levelInfo();
+    var tasks = pendingTasks().slice(0, 4);
+    var perk  = L.next && L.next.perk;
+
+    return '<div class="bsh-card bsh-tasks-card">' +
+      '<div class="bsh-tasks__title">Earn experience</div>' +
+      (tasks.length
+        ? tasks.map(function (t) {
+            return '<a class="bsh-task" href="#/profile">' +
+              '<span>' +
+                '<span class="bsh-task__label">' + esc(t.label) + '</span>' +
+                (t.hint ? '<span class="bsh-task__hint">' + esc(t.hint) + '</span>' : '') +
+              '</span>' +
+              '<span class="bsh-task__pts">+' + t.points + '</span>' +
+            '</a>';
+          }).join('')
+        : '<div class="bsh-tasks__done">Everything is filled in. Nothing left to earn.</div>') +
+      (perk
+        ? '<div class="bsh-xp__perk">' +
+            '<b>Next step</b>' +
+            '<span>' + esc(perk) + '</span>' +
+          '</div>'
+        : '') +
+    '</div>';
   }
 
   /* ===================================================================
      SCREEN: HOME
      =================================================================== */
   function screenHome() {
-    var p = S.profile || {};
+    var p     = S.profile || {};
     var first = (p.full_name || '').trim().split(/\s+/)[0];
 
-    var recent = (S.arts || []).slice().sort(function (a, b) {
-      return (b.created_at || '') > (a.created_at || '') ? 1 : -1;
-    }).slice(0, 5);
-
-    var n = (S.arts || []).length;
-
-    /* The journey only appears once the network has a path defined, so
-       the rail is built from what is actually on the page. */
+    var rankHtml    = rankCard();
+    var tasksHtml   = tasksCard();
     var journeyHtml = journeyCard(S.msMine);
-    var xpHtml      = xpCard();
 
     /* Only an administrator can act on this, so only they are told. */
     var notice = (isAdmin() && S.missing.length)
@@ -1626,78 +1760,166 @@ textarea.bsh-input { min-height: 104px; resize: vertical; font-family: var(--bsh
         '</div>'
       : '';
 
+    /* The section index earns its place on a long, stacked page. The
+       dashboard is not one: the top of it is a grid, so its parts sit
+       side by side rather than one below the next, and two dots for two
+       screens is furniture. It reappears on its own if the page ever
+       grows a third section worth pointing at. */
     var rail = [];
-    if (xpHtml) rail.push({ id: 'bsh-s-progress', label: 'Your progress' });
-    if (journeyHtml) rail.push({ id: 'bsh-s-journey', label: 'Your journey' });
-    rail.push({ id: 'bsh-s-links',  label: 'Sections' });
+    if (rankHtml || journeyHtml) rail.push({ id: 'bsh-s-progress', label: 'Where you stand' });
     rail.push({ id: 'bsh-s-latest', label: 'Latest material' });
 
-    paint((rail.length > 1 ? railMarkup(rail) : '') +
-      header('hub') +
-      '<div class="bsh-wrap">' +
-        '<section class="bsh-hero">' +
+    var lead = 'Everything ' + esc(CONFIG.brand) + ' publishes for its clients lives here: ' +
+               'guides, procedures and paperwork for launching and running your venue.';
+
+    /* The top of the page is one grid: how the client is doing on the
+       left, how far they have come on the right. Each column carries its
+       own heading, so the two read as separate stories side by side. */
+    var top = (rankHtml || tasksHtml || journeyHtml)
+      ? '<section class="bsh-section bsh-home" id="bsh-s-progress">' +
+          '<div class="bsh-home__col">' +
+            '<div class="bsh-home__head">' +
+              '<h1 class="bsh-h1"><span class="bsh-accent">Hello</span>' +
+                (first ? ', ' + esc(first) : '') + '</h1>' +
+              '<p class="bsh-lead" style="max-width:560px">' + lead + '</p>' +
+            '</div>' +
+            (rankHtml || tasksHtml
+              ? '<div class="bsh-duo">' + rankHtml + tasksHtml + '</div>'
+              : '') +
+          '</div>' +
+          (journeyHtml
+            ? '<div class="bsh-home__col">' +
+                '<div class="bsh-home__head">' +
+                  '<h2 class="bsh-h2"><span class="bsh-accent">Your</span> journey</h2>' +
+                  '<p class="bsh-lead">' + esc(journeyLead(S.msMine)) + '</p>' +
+                '</div>' +
+                journeyHtml +
+              '</div>'
+            : '') +
+        '</section>'
+      /* Nothing to show yet: the greeting still needs somewhere to live. */
+      : '<section class="bsh-hero">' +
           '<h1 class="bsh-h1"><span class="bsh-accent">Hello</span>' +
             (first ? ', ' + esc(first) : '') + '</h1>' +
-          '<p class="bsh-lead" style="max-width:620px">Everything ' + esc(CONFIG.brand) +
-            ' publishes for its clients lives here: guides, procedures and paperwork ' +
-            'for launching and running your venue.</p>' +
-        '</section>' +
+          '<p class="bsh-lead" style="max-width:620px">' + lead + '</p>' +
+        '</section>';
 
+    paint((rail.length > 2 ? railMarkup(rail) : '') +
+      header('hub') +
+      '<div class="bsh-wrap">' +
+        top +
         notice +
-
-        xpHtml +
-
-        journeyHtml +
-
-        '<section class="bsh-section" id="bsh-s-links"><div class="bsh-cards">' +
-          '<a class="bsh-shortcut" href="#/kb">' +
-            '<div class="bsh-shortcut__icon">📚</div>' +
-            '<div class="bsh-shortcut__title">Knowledge base</div>' +
-            '<div class="bsh-shortcut__text">Guides, procedures, artwork and documents, sorted by area.</div>' +
-            '<div class="bsh-shortcut__meta"><span class="bsh-badge">' +
-              n + (n === 1 ? ' article' : ' articles') + '</span></div>' +
-          '</a>' +
-          '<a class="bsh-shortcut bsh-shortcut--blue" href="#/profile">' +
-            '<div class="bsh-shortcut__icon">👤</div>' +
-            '<div class="bsh-shortcut__title">Profile</div>' +
-            '<div class="bsh-shortcut__text">Your venue details, contacts and password.</div>' +
-            '<div class="bsh-shortcut__meta"><span class="bsh-badge bsh-badge--blue">' +
-              esc(p.company || p.city || 'Add your details') + '</span></div>' +
-          '</a>' +
-          '<div class="bsh-shortcut bsh-shortcut--navy">' +
-            '<div class="bsh-shortcut__icon">💬</div>' +
-            '<div class="bsh-shortcut__title">Your manager</div>' +
-            '<div class="bsh-shortcut__text">' + managerBlock(p) + '</div>' +
-          '</div>' +
-        '</div></section>' +
-
         '<section class="bsh-section bsh-recent" id="bsh-s-latest">' +
           '<h2 class="bsh-h2"><span class="bsh-accent">Latest</span> material</h2>' +
-          '<div class="bsh-card bsh-card--flat" style="margin-top:18px">' +
-            (recent.length
-              ? recent.map(function (a) {
-                  var c      = catById(a.category_id);
-                  var locked = a.unlocked === false;
-                  return '<a class="bsh-recent__row" href="#/kb/a/' + esc(a.slug) + '">' +
-                    (c ? '<span class="bsh-badge">' + esc(c.title) + '</span>' : '') +
-                    '<span class="bsh-recent__body">' +
-                      '<span class="bsh-recent__title">' + esc(a.title) + '</span>' +
-                      (a.summary ? '<span class="bsh-recent__sum">' + esc(a.summary) + '</span>' : '') +
-                    '</span>' +
-                    (locked
-                      ? '<span class="bsh-badge bsh-badge--pink bsh-tip" data-tip="' +
-                        esc(lockNote(a).tip) + '">' + lockNote(a).badge + '</span>'
-                      : '') +
-                    '<span class="bsh-recent__arrow">→</span></a>';
-                }).join('')
-              : '<div class="bsh-empty"><div class="bsh-empty__icon">📭</div>Nothing published yet</div>') +
-          '</div>' +
+          '<div class="bsh-card" style="margin-top:18px">' + feedInner() + '</div>' +
         '</section>' +
       '</div>');
 
     bindLogout();
+    wireFeed();
     wireRail();
   }
+
+  /* The feed is redrawn on its own as the filter and the search change,
+     so the rest of the page — and the page's scroll position — stays put. */
+  function feedInner() {
+    var q    = (S.feedQuery || '').toLowerCase();
+    var cat  = S.feedCat || '';
+    var list = (S.arts || []).filter(function (a) {
+      var c = catById(a.category_id);
+      if (cat && (!c || c.slug !== cat)) return false;
+      if (q && (a.title + ' ' + (a.summary || '')).toLowerCase().indexOf(q) === -1) return false;
+      return true;
+    }).sort(function (a, b) {
+      return (b.created_at || '') > (a.created_at || '') ? 1 : -1;
+    }).slice(0, 6);
+
+    var chips = '<button class="bsh-chip' + (!cat ? ' is-active' : '') + '" data-feed="">All</button>' +
+      (S.cats || []).map(function (c) {
+        var shut = catLocked(c);
+        return '<button class="bsh-chip' + (cat === c.slug ? ' is-active' : '') +
+               (shut ? ' bsh-chip--locked bsh-tip' : '') + '" data-feed="' + esc(c.slug) + '"' +
+               (shut ? ' data-tip="Opens once you buy a subscription"' : '') + '>' +
+               (shut ? '🔒 ' : '') + esc(c.title) + '</button>';
+      }).join('');
+
+    return '<div class="bsh-feed__head">' +
+        '<div class="bsh-feed__chips">' + chips + '</div>' +
+        '<button class="bsh-iconbtn bsh-feed__find" type="button" id="bsh-feed-find" ' +
+          'title="Search" aria-label="Search the knowledge base">' + LENS + '</button>' +
+      '</div>' +
+      '<div class="bsh-feed__box' + (S.feedOpen ? ' is-open' : '') + '">' +
+        '<input class="bsh-input" id="bsh-feed-q" type="search" ' +
+          'placeholder="Search the knowledge base" value="' + esc(S.feedQuery || '') + '">' +
+      '</div>' +
+      (list.length
+        ? list.map(function (a) {
+            var c      = catById(a.category_id);
+            var locked = a.unlocked === false;
+            return '<a class="bsh-recent__row" href="#/kb/a/' + esc(a.slug) + '">' +
+              (c ? '<span class="bsh-badge">' + esc(c.title) + '</span>' : '') +
+              '<span class="bsh-recent__body">' +
+                '<span class="bsh-recent__title">' + esc(a.title) + '</span>' +
+                (a.summary ? '<span class="bsh-recent__sum">' + esc(a.summary) + '</span>' : '') +
+              '</span>' +
+              (locked
+                ? '<span class="bsh-badge bsh-badge--pink bsh-tip" data-tip="' +
+                  esc(lockNote(a).tip) + '">' + lockNote(a).badge + '</span>'
+                : '') +
+              '<span class="bsh-recent__arrow">→</span></a>';
+          }).join('')
+        : '<div class="bsh-empty"><div class="bsh-empty__icon">' +
+          (S.feedQuery || S.feedCat ? '🔍' : '📭') + '</div>' +
+          (S.feedQuery || S.feedCat ? 'Nothing here matches' : 'Nothing published yet') + '</div>');
+  }
+
+  function wireFeed() {
+    var card = document.querySelector('.bsh-recent .bsh-card');
+    if (!card) return;
+
+    card.querySelectorAll('.bsh-chip').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        S.feedCat = btn.getAttribute('data-feed');
+        card.innerHTML = feedInner();
+        wireFeed();
+        fitHost();
+      });
+    });
+
+    var find = document.getElementById('bsh-feed-find');
+    var box  = card.querySelector('.bsh-feed__box');
+    var q    = document.getElementById('bsh-feed-q');
+
+    find.addEventListener('click', function () {
+      S.feedOpen = !S.feedOpen;
+      box.classList.toggle('is-open', S.feedOpen);
+      if (S.feedOpen) { q.focus(); }
+      else if (S.feedQuery) {
+        S.feedQuery = '';
+        card.innerHTML = feedInner();
+        wireFeed();
+      }
+      fitHost();
+    });
+
+    q.addEventListener('input', function () {
+      S.feedQuery = q.value;
+      var pos = q.selectionStart;
+      card.innerHTML = feedInner();
+      wireFeed();
+      var again = document.getElementById('bsh-feed-q');
+      again.focus();
+      again.setSelectionRange(pos, pos);
+      fitHost();
+    });
+
+    revealActive(card.querySelector('.bsh-feed__chips'), '.bsh-chip.is-active');
+  }
+
+  var LENS =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+    'stroke-linecap="round" aria-hidden="true">' +
+    '<circle cx="10.8" cy="10.8" r="6.8"/><path d="M15.8 15.8 21 21"/></svg>';
 
   /* ===================================================================
      SCREEN: KNOWLEDGE BASE LIST
