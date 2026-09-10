@@ -189,6 +189,12 @@ other reason to prefer it.
 The recovery email sends the client back to that address with a token in the URL
 hash. The block spots it on start-up and opens the "New password" screen.
 
+**This is the only way a client changes their password.** The profile screen
+carries no password form: a client who wants a new one uses *Forgot your
+password?* on the sign-in screen and follows the emailed link, which proves they
+still hold the mailbox before letting them set one. So the redirect URL above is
+not optional — without it that link comes back to nothing.
+
 ---
 
 ## Administration
@@ -217,6 +223,10 @@ Dashboard, so an account in the hub can never promote itself.
   **Marketing** section, and loses it again the day after it lapses.
 - **Suspend access**: set `status` to `suspended` and RLS stops serving that
   client the knowledge base, without deleting anything.
+
+A client's sign-in address is shown under their name on the profile, but there is
+no field to edit it: only an administrator can change an account's email, from
+the Dashboard.
 
 A client sees the plan and the paid period on their own profile, with a badge
 that turns amber two weeks out and crimson once it lapses. They cannot edit any
@@ -348,9 +358,23 @@ screen is rendered from the same numbers the database scores with.
 | City | 10 | | Instagram | 10 |
 | Full address | 15 | | Telegram channel | 10 |
 | Phone | 10 | | About the arena (80+ chars) | 20 |
-| Telegram | 10 | | Logo | 15 |
+| WhatsApp | 10 | | Logo | 15 |
 
 A fully described arena is worth **145 EXP**.
+
+The client's own contact field is **WhatsApp**, not Telegram. On a database that
+predates the change `schema.sql` renames the column rather than adding a new one,
+so every number already on file survives and PostgreSQL carries the generated
+`exp` expression across with it. If the rename ever refuses, drop the generated
+column first and let the script rebuild it:
+
+```sql
+alter table public.profiles drop column if exists exp;
+```
+
+The separate **Telegram channel** field in the arena section is untouched: that
+one is where the venue posts news for guests, not how a manager reaches the
+owner.
 
 ### Levels
 

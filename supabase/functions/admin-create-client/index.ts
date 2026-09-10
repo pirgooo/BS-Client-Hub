@@ -91,7 +91,7 @@ Deno.serve(async (req: Request) => {
   // The on_auth_user_created trigger has already made the row.
   const patch: Record<string, unknown> = {};
   for (const key of [
-    'full_name', 'company', 'city', 'address', 'phone', 'telegram',
+    'full_name', 'company', 'city', 'address', 'phone', 'whatsapp',
     'website', 'social_facebook', 'social_instagram', 'social_telegram',
     'about', 'logo_url',
     'manager_name', 'manager_contact', 'manager_whatsapp',

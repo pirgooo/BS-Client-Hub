@@ -21,7 +21,7 @@ create table if not exists public.profiles (
   company         text,                       -- venue / location name
   city            text,
   phone           text,
-  telegram        text,
+  whatsapp        text,
   avatar_url      text,
   manager_name     text,                      -- dedicated Battle Start manager
   manager_contact  text,
@@ -75,6 +75,25 @@ end $$;
 alter table public.profiles add column if not exists social_facebook  text;
 alter table public.profiles add column if not exists social_instagram text;
 alter table public.profiles add column if not exists social_telegram  text;
+
+-- The client's own contact field became WhatsApp. Renaming keeps the data
+-- and lets PostgreSQL rewrite the generated exp expression along with it;
+-- creating a new column and dropping the old one would lose every number
+-- already on file. Guarded, so the script stays safe to re-run.
+do $$
+begin
+  if exists (
+       select 1 from information_schema.columns
+       where table_schema = 'public' and table_name = 'profiles' and column_name = 'telegram')
+     and not exists (
+       select 1 from information_schema.columns
+       where table_schema = 'public' and table_name = 'profiles' and column_name = 'whatsapp')
+  then
+    alter table public.profiles rename column telegram to whatsapp;
+  end if;
+end $$;
+
+alter table public.profiles add column if not exists whatsapp text;
 alter table public.profiles add column if not exists about            text;
 alter table public.profiles add column if not exists logo_url         text;
 alter table public.profiles add column if not exists manager_whatsapp   text;
@@ -280,7 +299,7 @@ insert into public.exp_rules (field, points, label, hint, min_length, sort_order
   ('city',             10, 'City',             'Where the arena operates',                      1,  30),
   ('address',          15, 'Full address',     'Street and building, as in the maps listing',   1,  40),
   ('phone',            10, 'Phone',            'The number guests call',                        1,  50),
-  ('telegram',         10, 'Telegram',         'For your manager to reach you quickly',         1,  60),
+  ('whatsapp',         10, 'WhatsApp',         'For your manager to reach you quickly',         1,  60),
   ('website',          15, 'Website',          'Your arena page or booking site',               1,  70),
   ('social_facebook',  10, 'Facebook page',    'The public page for your arena',                1,  80),
   ('social_instagram', 10, 'Instagram',        'The arena account',                             1,  90),
@@ -293,6 +312,9 @@ on conflict (field) do update
       hint       = excluded.hint,
       min_length = excluded.min_length,
       sort_order = excluded.sort_order;
+
+-- The rule it replaced would otherwise linger and be scored twice.
+delete from public.exp_rules where field = 'telegram';
 
 -- Retired: replaced by social_facebook when the network went international.
 delete from public.exp_rules where field = 'social_vk';
@@ -327,7 +349,7 @@ alter table public.profiles add column if not exists exp integer
     (case when length(btrim(coalesce(city,             ''))) > 0  then 10 else 0 end) +
     (case when length(btrim(coalesce(address,          ''))) > 0  then 15 else 0 end) +
     (case when length(btrim(coalesce(phone,            ''))) > 0  then 10 else 0 end) +
-    (case when length(btrim(coalesce(telegram,         ''))) > 0  then 10 else 0 end) +
+    (case when length(btrim(coalesce(whatsapp,         ''))) > 0  then 10 else 0 end) +
     (case when length(btrim(coalesce(website,          ''))) > 0  then 15 else 0 end) +
     (case when length(btrim(coalesce(social_facebook,  ''))) > 0  then 10 else 0 end) +
     (case when length(btrim(coalesce(social_instagram, ''))) > 0  then 10 else 0 end) +
